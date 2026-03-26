@@ -64,8 +64,12 @@ The project is structured as two native Flutter apps backed by a shared backend:
 - [packages/lokal_health_shared](/Users/aditya/Desktop/Lokal_medass/packages/lokal_health_shared)
 
 Architecture and diagrams:
+<<<<<<< HEAD
 - [system-architecture.md](/Users/aditya/Desktop/Lokal_medass/docs/sd.png)
 
+=======
+![System Design](Users/aditya/Desktop/Lokal_medass/docs/sd.png)
+>>>>>>> d32c5c4 (readme update)
 ## Repository Layout
 
 ```text
