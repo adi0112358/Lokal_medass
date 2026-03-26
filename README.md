@@ -1,77 +1,235 @@
-# Lokal MedAssist Native
+# Lokal MedAssist
 
-Native Android-first proposal workspace for Lokal's medical assistance platform.
+Lokal MedAssist is a proposal-stage Android-first healthcare platform designed for tier 2 and tier 3 cities. It combines AI-assisted symptom guidance with doctor-led consultation, prescription management, appointment booking, and patient follow-up.
 
-## Workspace layout
+This repository contains a working MVP with:
+- a separate `Patient App`
+- a separate `Doctor App`
+- a shared `Node.js backend`
+- an `AI triage flow` integrated through the backend
 
-- `apps/patient_app`: Flutter patient application
-- `apps/doctor_app`: Flutter doctor application
-- `packages/lokal_health_shared`: shared models, seeded data, and app-safe domain helpers
-- `services/patient_backend`: patient-facing backend with OpenRouter-powered AI chat
-- `docs/system-architecture.md`: production architecture for auth, LLM orchestration, video, payments, and queueing
+## Problem Statement
 
-## Product direction
+In smaller cities, healthcare access is often delayed because:
+- clinics and hospitals are centralized
+- doctors operate in fixed time windows
+- many patients travel physically even for basic consultation needs
+- non-emergency cases still consume time and create queue pressure
+- patients often need local-language guidance before deciding whether to visit a doctor
 
-This workspace now reflects the correct target shape:
+Lokal MedAssist addresses this by giving patients:
+- local-language AI guidance for first-level symptom intake
+- a path to escalate to real doctors when needed
+- digital bookings, appointments, prescriptions, and feedback
 
-- separate patient and doctor apps
-- local-language patient experience
-- LLM-based medical guidance through backend orchestration
-- doctor handoff, video consultation, prescription, feedback, and wallet flows
+## Product Overview
 
-## Current state
+### Patient App
+- patient login and session persistence
+- AI medical chat with structured triage output
+- doctor discovery and consultation booking
+- appointment history and follow-up booking
+- prescription access
+- feedback submission
 
-This is a native app scaffold with working Flutter UI code structure and demo data flows.
-It is not yet wired to:
+### Doctor App
+- doctor login and session persistence
+- online/offline availability toggle
+- consultation queue view
+- consultation start / complete workflow
+- physical follow-up request flow
+- prescription issuance
+- wallet and earnings view
 
-- production authentication
-- production database
-- real video calling SDK
-- real payment gateway
-- production LLM account
-- real notifications
+### Backend
+- patient auth APIs
+- doctor auth APIs
+- chat history APIs
+- doctor listing APIs
+- booking APIs
+- appointment APIs
+- prescription APIs
+- feedback APIs
+- doctor queue and consultation APIs
+- local persistent storage for demo continuity
+- OpenRouter-backed AI triage integration
 
-## Recommended stack
+## System Shape
 
-- Mobile apps: Flutter
-- Backend: Node.js with NestJS or Express
-- Database: PostgreSQL
-- Cache / queue: Redis
-- Notifications: Firebase Cloud Messaging
-- Video: Agora or Twilio
-- Payments: Razorpay
-- LLM orchestration: OpenAI API via backend only
+The project is structured as two native Flutter apps backed by a shared backend:
 
-## How to continue
+- [apps/patient_app](/Users/aditya/Desktop/Lokal_medass/apps/patient_app)
+- [apps/doctor_app](/Users/aditya/Desktop/Lokal_medass/apps/doctor_app)
+- [services/patient_backend](/Users/aditya/Desktop/Lokal_medass/services/patient_backend)
+- [packages/lokal_health_shared](/Users/aditya/Desktop/Lokal_medass/packages/lokal_health_shared)
 
-1. Install Flutter on your machine.
-2. From each app directory, run:
+Architecture and diagrams:
+- [system-architecture.md](/Users/aditya/Desktop/Lokal_medass/docs/system-architecture.md)
+- [system-design-n8n-style.pdf](/Users/aditya/Desktop/Lokal_medass/docs/system-design-n8n-style.pdf)
+- [system-design-n8n-style.svg](/Users/aditya/Desktop/Lokal_medass/docs/system-design-n8n-style.svg)
 
-```bash
-flutter pub get
-flutter run
+## Repository Layout
+
+```text
+Lokal_medass/
+├── apps/
+│   ├── patient_app/           # Flutter patient application
+│   └── doctor_app/            # Flutter doctor application
+├── packages/
+│   └── lokal_health_shared/   # Shared models and domain helpers
+├── services/
+│   └── patient_backend/       # Node.js backend + AI integration
+└── docs/
+    ├── patient-backend.md
+    ├── system-architecture.md
+    ├── system-design-n8n-style.pdf
+    └── system-design-n8n-style.svg
 ```
 
-For the patient backend:
+## Tech Stack
+
+- Mobile: `Flutter`
+- Backend: `Node.js + Express`
+- AI Provider: `OpenRouter`
+- Local persistence: file-backed JSON store
+- Architecture direction: modular backend with workflow orchestration
+
+Recommended production stack:
+- Database: `PostgreSQL`
+- Cache / realtime: `Redis`
+- Video: `Agora` or `Twilio`
+- Payments: `Razorpay`
+- Notifications: `Firebase Cloud Messaging`
+
+## Demo Credentials
+
+### Patient
+- email: `suman.verma@lokal.demo`
+- password: `Pass@123`
+
+### Doctor
+- email: `meera.sharma@lokal.demo`
+- password: `Doc@123`
+
+If credentials do not work because old local data was already created, reset the demo store:
+
+```bash
+rm /Users/aditya/Desktop/Lokal_medass/services/patient_backend/data/store.json
+```
+
+Then restart the backend to reseed.
+
+## Local Setup
+
+### 1. Start the backend
 
 ```bash
 cd /Users/aditya/Desktop/Lokal_medass/services/patient_backend
 npm install
+cp .env.example .env
+```
+
+Set values in [services/patient_backend/.env](/Users/aditya/Desktop/Lokal_medass/services/patient_backend/.env):
+
+```bash
+PORT=8080
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+OPENROUTER_MODEL=openrouter/free
+JWT_SECRET=replace_this_for_non_demo_usage
+```
+
+Then run:
+
+```bash
 npm run dev
 ```
 
-Detailed patient backend APIs:
+Health check:
+- [http://localhost:8080/health](http://localhost:8080/health)
 
-- [/Users/aditya/Desktop/Lokal_medass/docs/patient-backend.md](/Users/aditya/Desktop/Lokal_medass/docs/patient-backend.md)
+For Android emulator requests, the base URL is:
+- `http://10.0.2.2:8080`
 
-3. If platform folders are missing in your environment, run:
+### 2. Run the patient app
+
+```bash
+cd /Users/aditya/Desktop/Lokal_medass/apps/patient_app
+flutter pub get
+flutter run -d emulator-5554
+```
+
+### 3. Run the doctor app
+
+```bash
+cd /Users/aditya/Desktop/Lokal_medass/apps/doctor_app
+flutter pub get
+flutter run -d emulator-5554
+```
+
+If platform folders are missing in an app directory, generate them once:
 
 ```bash
 flutter create .
 ```
 
-inside `apps/patient_app` and `apps/doctor_app`, then reapply the `lib/` and `pubspec.yaml` contents from this workspace if needed.
+## Backend API Reference
 
-## Important note
+Detailed backend documentation is available here:
+- [patient-backend.md](/Users/aditya/Desktop/Lokal_medass/docs/patient-backend.md)
 
-I could not run or build Flutter here because this machine currently does not have `flutter` or `dart` installed.
+The backend currently includes:
+- patient registration, login, and profile
+- doctor login and profile
+- patient AI chat and saved conversations
+- doctor listing and doctor details
+- consultation bookings
+- appointments
+- prescriptions
+- patient feedback
+- doctor queue actions
+- doctor wallet summary
+
+## MVP Status
+
+This project is ready as a `proposal MVP`.
+
+It is suitable for:
+- product demonstration
+- architecture discussion
+- feasibility validation
+- pitch / proposal submission
+
+It is not yet production-ready.
+
+## Current Limitations
+
+The current build still uses MVP-level infrastructure and should not be positioned as a production healthcare release yet.
+
+Missing production hardening includes:
+- PostgreSQL or managed cloud database
+- real payment gateway integration
+- real video consultation SDK integration
+- push notifications
+- cloud deployment
+- admin operations panel
+- audit/compliance hardening
+- advanced medical safety governance
+
+## Why This Matters
+
+Lokal MedAssist demonstrates a realistic digital healthcare model for underserved city segments:
+- AI handles first-level guidance and intake
+- doctors handle real consultation and prescription decisions
+- patients avoid unnecessary clinic visits
+- doctors can handle traffic more efficiently
+- Lokal gains a new healthcare service line aligned with its local-language strategy
+
+## Proposal Positioning
+
+The right way to present this repository is:
+
+`A working MVP and technical proposal for Lokal AI’s medical assistance platform, designed for tier 2 and tier 3 cities.`
+
+## License
+
+This repository is currently intended for proposal/demo use.
