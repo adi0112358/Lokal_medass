@@ -1,0 +1,12 @@
+.next
+node_modules
+dist
+coverage
+.DS_Store
+.dart_tool
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build
+.env
+services/patient_backend/data/store.json

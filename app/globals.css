@@ -1,0 +1,379 @@
+:root {
+  --bg: #f5efe3;
+  --panel: rgba(255, 251, 245, 0.82);
+  --panel-strong: #fffaf2;
+  --text: #1e1c18;
+  --muted: #675d4f;
+  --line: rgba(70, 54, 30, 0.14);
+  --accent: #0d8c74;
+  --accent-deep: #0a6957;
+  --accent-soft: #d4f2ea;
+  --warm: #f0c36a;
+  --shadow: 0 24px 80px rgba(52, 39, 20, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: Georgia, "Times New Roman", serif;
+  background:
+    radial-gradient(circle at top left, rgba(13, 140, 116, 0.14), transparent 30%),
+    radial-gradient(circle at top right, rgba(240, 195, 106, 0.22), transparent 24%),
+    linear-gradient(180deg, #f7f2e8 0%, #efe4cf 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.shell {
+  width: min(1200px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 24px 0 56px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  background: rgba(255, 250, 242, 0.74);
+  backdrop-filter: blur(16px);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+}
+
+.brand {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.brand span {
+  color: var(--accent-deep);
+}
+
+.navlinks {
+  display: flex;
+  gap: 18px;
+  color: var(--muted);
+}
+
+.landing,
+.problem-grid,
+.workspace-grid {
+  margin-top: 28px;
+}
+
+.landing {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 22px;
+  align-items: stretch;
+}
+
+.panel,
+.proposal-card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.hero-panel {
+  background:
+    linear-gradient(135deg, rgba(255, 250, 242, 0.96), rgba(241, 255, 251, 0.88)),
+    var(--panel);
+}
+
+.eyebrow,
+.section-tag {
+  margin: 0 0 12px;
+  color: var(--accent-deep);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  font-size: clamp(2.3rem, 4vw, 4.5rem);
+  line-height: 0.95;
+  margin-bottom: 18px;
+}
+
+h2 {
+  font-size: 1.55rem;
+  margin-bottom: 14px;
+}
+
+.lede {
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.65;
+  max-width: 62ch;
+}
+
+.action-row,
+.stat-row,
+.metric-row,
+.split-header,
+.doctor-head,
+.dual-actions {
+  display: flex;
+  gap: 14px;
+}
+
+.action-row,
+.stat-row,
+.metric-row,
+.dual-actions {
+  flex-wrap: wrap;
+}
+
+.split-header,
+.doctor-head {
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.stat-row {
+  margin-top: 24px;
+}
+
+.stat-row > div,
+.metric-row > div {
+  min-width: 140px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+}
+
+.stat-row strong,
+.metric-row strong {
+  display: block;
+  font-size: 1.2rem;
+}
+
+.stat-row span,
+.metric-row span,
+.detail-list span,
+.doctor-meta,
+.empty-copy {
+  color: var(--muted);
+}
+
+.proposal-card ul {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 12px;
+}
+
+.problem-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.workspace-grid > .panel:first-child,
+.chat-panel {
+  grid-column: 1 / -1;
+}
+
+.detail-list {
+  display: grid;
+  gap: 16px;
+}
+
+.detail-list div {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-list strong {
+  display: block;
+  margin-top: 6px;
+}
+
+.status-chip,
+.online-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  border: 1px solid var(--line);
+  background: var(--panel-strong);
+}
+
+.online-pill.live {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+.online-pill.offline {
+  background: rgba(103, 93, 79, 0.12);
+  color: var(--muted);
+}
+
+.chat-log {
+  display: grid;
+  gap: 14px;
+  margin: 20px 0;
+}
+
+.chat-bubble {
+  max-width: min(720px, 100%);
+  padding: 16px 18px;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+}
+
+.chat-bubble.assistant {
+  background: #fff8ef;
+}
+
+.chat-bubble.patient {
+  justify-self: end;
+  background: #e8faf5;
+}
+
+.chat-bubble span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--accent-deep);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chat-form,
+.feedback-form {
+  display: grid;
+  gap: 12px;
+}
+
+.chat-form {
+  grid-template-columns: 1fr auto;
+}
+
+.card-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.doctor-card {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--panel-strong);
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--text);
+}
+
+textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+button,
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease;
+}
+
+button:hover,
+.cta:hover {
+  transform: translateY(-1px);
+  background: var(--accent-deep);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.secondary,
+.secondary-link {
+  background: transparent;
+  color: var(--accent-deep);
+  border: 1px solid rgba(13, 140, 116, 0.3);
+}
+
+.secondary:hover,
+.secondary-link:hover {
+  background: rgba(13, 140, 116, 0.08);
+}
+
+@media (max-width: 900px) {
+  .landing,
+  .problem-grid,
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-form {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar,
+  .navlinks {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

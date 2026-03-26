@@ -1,0 +1,5 @@
+name: lokal_medass
+
+packages:
+  - apps/**
+  - packages/**

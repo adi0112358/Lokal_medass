@@ -1,0 +1,90 @@
+flowchart TB
+    subgraph Clients
+        P["Patient Android App"]
+        D["Doctor Android App"]
+        A["Admin / Ops Dashboard"]
+    end
+
+    subgraph Edge
+        WAF["WAF / Rate Limiter"]
+        API["API Gateway"]
+    end
+
+    subgraph Core_Backend
+        AUTH["Auth & Identity Service"]
+        PROFILE["Patient / Doctor Profile Service"]
+        CONSULT["Consultation & Queue Service"]
+        APPT["Appointment Service"]
+        RX["Prescription Service"]
+        FEED["Feedback & Rating Service"]
+        PAY["Payment & Wallet Service"]
+        VIDEO["Video Session Service"]
+        NOTIF["Notification Service"]
+    end
+
+    subgraph AI_Automation
+        TRIAGE["AI Triage Service"]
+        ORCH["Workflow Orchestrator (n8n-type)"]
+        RULES["Medical Safety Rules Engine"]
+        PROMPT["Prompt / Context Builder"]
+        LLM["LLM Gateway"]
+    end
+
+    subgraph Data_Infra
+        PG["PostgreSQL"]
+        REDIS["Redis / Realtime State"]
+        STORE["Object Storage"]
+        AUDIT["Audit Logs / Analytics"]
+    end
+
+    subgraph External_Integrations
+        FCM["Firebase Cloud Messaging"]
+        RZP["Razorpay"]
+        VC["Agora / Twilio"]
+        MODEL["OpenAI / Gemini / OpenRouter"]
+    end
+
+    P --> WAF --> API
+    D --> WAF --> API
+    A --> WAF --> API
+
+    API --> AUTH
+    API --> PROFILE
+    API --> CONSULT
+    API --> APPT
+    API --> RX
+    API --> FEED
+    API --> PAY
+    API --> VIDEO
+    API --> NOTIF
+    API --> TRIAGE
+
+    TRIAGE --> ORCH
+    ORCH --> RULES
+    ORCH --> PROMPT
+    PROMPT --> LLM
+    LLM --> MODEL
+
+    AUTH --> PG
+    PROFILE --> PG
+    CONSULT --> PG
+    APPT --> PG
+    RX --> PG
+    FEED --> PG
+    PAY --> PG
+    TRIAGE --> PG
+
+    CONSULT --> REDIS
+    NOTIF --> REDIS
+
+    RX --> STORE
+    PROFILE --> STORE
+
+    AUTH --> AUDIT
+    CONSULT --> AUDIT
+    TRIAGE --> AUDIT
+    PAY --> AUDIT
+
+    NOTIF --> FCM
+    PAY --> RZP
+    VIDEO --> VC
