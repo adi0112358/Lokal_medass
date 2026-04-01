@@ -112,5 +112,6 @@ export const demoStore: DemoStore = {
         "Namaste. I can help with symptom guidance, medication reminders, and deciding whether you need a doctor call or clinic visit.",
       createdAt: "2026-03-26T10:00:00.000Z"
     }
-  ]
+  ],
+  applications: []
 };

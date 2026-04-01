@@ -27,7 +27,9 @@ Lokal MedAssist addresses this by giving patients:
 ### Patient App
 - patient login and session persistence
 - AI medical chat with structured triage output
+- patient metadata management
 - doctor discovery and consultation booking
+- 1:1 video consultation join flow
 - appointment history and follow-up booking
 - prescription access
 - feedback submission
@@ -37,6 +39,8 @@ Lokal MedAssist addresses this by giving patients:
 - online/offline availability toggle
 - consultation queue view
 - consultation start / complete workflow
+- patient metadata and consultation context view
+- 1:1 video room launch flow
 - physical follow-up request flow
 - prescription issuance
 - wallet and earnings view
@@ -65,6 +69,11 @@ The project is structured as two native Flutter apps backed by a shared backend:
 
 ## Architecture and Diagrams
 ![System Design](./docs/sd.png)
+
+Supporting docs:
+- [system-architecture.md](/Users/aditya/Desktop/Lokal_medass/docs/system-architecture.md)
+- [patient-backend.md](/Users/aditya/Desktop/Lokal_medass/docs/patient-backend.md)
+- [deployment.md](/Users/aditya/Desktop/Lokal_medass/docs/deployment.md)
 
 ## Repository Layout
 
@@ -162,6 +171,20 @@ flutter run -d emulator-5554
 cd /Users/aditya/Desktop/Lokal_medass/apps/doctor_app
 flutter pub get
 flutter run -d emulator-5554
+```
+
+### 4. Build public APKs after backend deployment
+
+After you deploy the backend publicly, rebuild both apps with the hosted backend URL:
+
+```bash
+cd /Users/aditya/Desktop/Lokal_medass/apps/patient_app
+flutter build apk --release --dart-define=PATIENT_API_BASE_URL=https://your-backend-url.onrender.com
+```
+
+```bash
+cd /Users/aditya/Desktop/Lokal_medass/apps/doctor_app
+flutter build apk --release --dart-define=PATIENT_API_BASE_URL=https://your-backend-url.onrender.com
 ```
 
 If platform folders are missing in an app directory, generate them once:

@@ -71,10 +71,25 @@ export type ChatMessage = {
   createdAt: string;
 };
 
+export type JobApplication = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  team: string;
+  location: string;
+  portfolio?: string;
+  experienceLevel: "0-2 years" | "3-5 years" | "6-9 years" | "10+ years";
+  coverNote: string;
+  createdAt: string;
+};
+
 export type DemoStore = {
   patient: PatientProfile;
   doctors: DoctorProfile[];
   consultations: ConsultationRecord[];
   feedback: Feedback[];
   chat: ChatMessage[];
+  applications: JobApplication[];
 };

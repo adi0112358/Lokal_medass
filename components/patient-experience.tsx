@@ -29,6 +29,8 @@ export function PatientExperience() {
     return <div className="panel">Loading patient workspace...</div>;
   }
 
+  const activeStore = store;
+
   async function handleChatSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!message.trim()) {
@@ -52,7 +54,7 @@ export function PatientExperience() {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ prompt, language: store.patient.preferredLanguage })
+      body: JSON.stringify({ prompt, language: activeStore.patient.preferredLanguage })
     });
 
     const data = (await response.json()) as { reply: string };
@@ -69,9 +71,9 @@ export function PatientExperience() {
     startTransition(() => {
       const record: ConsultationRecord = {
         id: createId("CONS"),
-        patientId: store.patient.patientId,
+        patientId: activeStore.patient.patientId,
         doctorId: doctor.doctorId,
-        concern: store.chat.at(-1)?.text ?? "General consultation requested",
+        concern: activeStore.chat.at(-1)?.text ?? "General consultation requested",
         recommendedMode: "VIDEO_CALL",
         status: "QUEUED",
         scheduledAt: new Date().toISOString(),
@@ -110,7 +112,7 @@ export function PatientExperience() {
 
     submitFeedback({
       consultationId: latestConsultation.id,
-      patientId: store.patient.patientId,
+      patientId: activeStore.patient.patientId,
       doctorId: latestConsultation.doctorId,
       rating: feedbackRating,
       note: feedbackNote.trim(),
@@ -132,15 +134,15 @@ export function PatientExperience() {
         </p>
         <div className="stat-row">
           <div>
-            <strong>{store.patient.patientId}</strong>
+            <strong>{activeStore.patient.patientId}</strong>
             <span>Unique patient ID</span>
           </div>
           <div>
-            <strong>{store.patient.preferredLanguage}</strong>
+            <strong>{activeStore.patient.preferredLanguage}</strong>
             <span>Preferred language</span>
           </div>
           <div>
-            <strong>{store.patient.previousConsultations}</strong>
+            <strong>{activeStore.patient.previousConsultations}</strong>
             <span>Past consultations</span>
           </div>
         </div>
@@ -151,21 +153,21 @@ export function PatientExperience() {
         <div className="detail-list">
           <div>
             <span>Name</span>
-            <strong>{store.patient.name}</strong>
+            <strong>{activeStore.patient.name}</strong>
           </div>
           <div>
             <span>Demographics</span>
             <strong>
-              {store.patient.age} years, {store.patient.sex}, BMI {store.patient.bmi}
+              {activeStore.patient.age} years, {activeStore.patient.sex}, BMI {activeStore.patient.bmi}
             </strong>
           </div>
           <div>
             <span>Medical history</span>
-            <strong>{store.patient.medicalHistory.join(", ")}</strong>
+            <strong>{activeStore.patient.medicalHistory.join(", ")}</strong>
           </div>
           <div>
             <span>Reports</span>
-            <strong>{store.patient.reports.join(", ")}</strong>
+            <strong>{activeStore.patient.reports.join(", ")}</strong>
           </div>
         </div>
       </section>
@@ -179,7 +181,7 @@ export function PatientExperience() {
           <span className="status-chip">Safe guidance only</span>
         </div>
         <div className="chat-log">
-          {store.chat.map((entry) => (
+          {activeStore.chat.map((entry) => (
             <article
               key={entry.id}
               className={entry.sender === "assistant" ? "chat-bubble assistant" : "chat-bubble patient"}
@@ -210,7 +212,7 @@ export function PatientExperience() {
           </span>
         </div>
         <div className="card-grid">
-          {store.doctors.map((doctor) => (
+          {activeStore.doctors.map((doctor) => (
             <article key={doctor.doctorId} className="doctor-card">
               <div className="doctor-head">
                 <div>

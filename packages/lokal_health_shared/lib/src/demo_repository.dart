@@ -28,6 +28,16 @@ class DemoRepository {
         medicalHistory: ['Seasonal allergies', 'Mild anemia in 2024'],
         reports: ['CBC Report - Jan 2026', 'Vitamin Panel - Feb 2026'],
         previousConsultations: 14,
+        metadata: PatientMetadata(
+          heightCm: 162,
+          weightKg: 63,
+          bloodGroup: 'B+',
+          allergies: ['Dust', 'Pollen'],
+          currentMedications: ['Iron supplement'],
+          chronicConditions: ['Acidity episodes'],
+          emergencyContactName: 'Rahul Verma',
+          emergencyContactPhone: '+91 9000000000',
+        ),
       ),
       doctors: const [
         DoctorProfile(
@@ -89,11 +99,26 @@ class DemoRepository {
           status: ConsultationStatus.followUp,
           scheduledAt: DateTime(2026, 3, 23, 10, 30),
           amountPaid: 399,
+          patientName: 'Suman Verma',
+          patientAge: 33,
+          patientSex: 'Female',
+          patientCity: 'Kanpur',
+          patientMedicalHistory: ['Seasonal allergies', 'Mild anemia in 2024'],
+          patientCurrentMedications: ['Iron supplement'],
+          doctorName: 'Dr. Meera Sharma',
           prescription:
               'Take antacid syrup after meals for 5 days. Avoid oily food. Schedule a physical check if pain increases.',
           followUpRequired: true,
           clinicVisitDate: '2026-03-29',
           clinicVisitSlot: '11:30 AM',
+          videoSession: ConsultationVideoSession(
+            sessionId: 'VID-2001',
+            provider: 'jitsi',
+            roomName: 'lokal-cons-7601',
+            joinUrl: 'https://meet.jit.si/lokal-cons-7601',
+            status: 'LIVE',
+            startedAt: DateTime(2026, 3, 23, 10, 30),
+          ),
         ),
         ConsultationRecord(
           id: 'CONS-7602',
@@ -104,6 +129,13 @@ class DemoRepository {
           status: ConsultationStatus.completed,
           scheduledAt: DateTime(2026, 3, 19, 8, 0),
           amountPaid: 0,
+          patientName: 'Suman Verma',
+          patientAge: 33,
+          patientSex: 'Female',
+          patientCity: 'Kanpur',
+          patientMedicalHistory: ['Seasonal allergies', 'Mild anemia in 2024'],
+          patientCurrentMedications: ['Iron supplement'],
+          doctorName: 'Dr. Farah Khan',
           prescription:
               'Use calamine lotion twice daily and keep the area dry.',
           followUpRequired: false,
@@ -190,6 +222,13 @@ class DemoRepository {
       scheduledAt: DateTime.now(),
       amountPaid: doctor.fee,
       followUpRequired: false,
+      patientName: state.patient.name,
+      patientAge: state.patient.age,
+      patientSex: state.patient.sex,
+      patientCity: state.patient.city,
+      patientMedicalHistory: state.patient.medicalHistory,
+      patientCurrentMedications: state.patient.metadata.currentMedications,
+      doctorName: doctor.name,
     );
 
     final doctors = state.doctors

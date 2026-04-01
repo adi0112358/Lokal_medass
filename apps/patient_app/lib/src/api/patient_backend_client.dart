@@ -134,6 +134,55 @@ class PatientBackendClient {
     };
   }
 
+  Language _parseLanguage(String value) {
+    switch (value.toLowerCase()) {
+      case 'hindi':
+        return Language.hindi;
+      case 'marathi':
+        return Language.marathi;
+      default:
+        return Language.english;
+    }
+  }
+
+  PatientMetadata _parseMetadata(Map<String, dynamic>? json) {
+    final source = json ?? const <String, dynamic>{};
+    return PatientMetadata(
+      heightCm: (source['heightCm'] as num?)?.toDouble(),
+      weightKg: (source['weightKg'] as num?)?.toDouble(),
+      bloodGroup: source['bloodGroup'] as String?,
+      allergies: (source['allergies'] as List<dynamic>? ?? const [])
+          .map((item) => item.toString())
+          .toList(),
+      currentMedications:
+          (source['currentMedications'] as List<dynamic>? ?? const [])
+              .map((item) => item.toString())
+              .toList(),
+      chronicConditions:
+          (source['chronicConditions'] as List<dynamic>? ?? const [])
+              .map((item) => item.toString())
+              .toList(),
+      emergencyContactName: source['emergencyContactName'] as String?,
+      emergencyContactPhone: source['emergencyContactPhone'] as String?,
+      lastUpdated: DateTime.tryParse(source['lastUpdated'] as String? ?? ''),
+    );
+  }
+
+  ConsultationVideoSession? _parseVideoSession(Map<String, dynamic>? json) {
+    if (json == null) {
+      return null;
+    }
+    return ConsultationVideoSession(
+      sessionId: json['sessionId'] as String,
+      provider: json['provider'] as String? ?? 'jitsi',
+      roomName: json['roomName'] as String? ?? '',
+      joinUrl: json['joinUrl'] as String? ?? '',
+      status: json['status'] as String? ?? 'READY',
+      startedAt: DateTime.tryParse(json['startedAt'] as String? ?? ''),
+      expiresAt: DateTime.tryParse(json['expiresAt'] as String? ?? ''),
+    );
+  }
+
   PatientProfile _parsePatient(Map<String, dynamic> json) {
     final language = (json['preferredLanguage'] as String? ?? 'English').toLowerCase();
     return PatientProfile(
@@ -143,11 +192,7 @@ class PatientBackendClient {
       sex: json['sex'] as String? ?? 'Other',
       bmi: (json['bmi'] as num?)?.toDouble() ?? 0,
       city: json['city'] as String? ?? '',
-      preferredLanguage: language == 'hindi'
-          ? Language.hindi
-          : language == 'marathi'
-              ? Language.marathi
-              : Language.english,
+      preferredLanguage: _parseLanguage(language),
       medicalHistory: (json['medicalHistory'] as List<dynamic>? ?? const [])
           .map((item) => item.toString())
           .toList(),
@@ -155,27 +200,17 @@ class PatientBackendClient {
           .map((item) => item.toString())
           .toList(),
       previousConsultations: (json['previousConsultations'] as num?)?.toInt() ?? 0,
+      metadata: _parseMetadata(json['metadata'] as Map<String, dynamic>?),
     );
   }
 
   DoctorProfile _parseDoctor(Map<String, dynamic> json) {
-    Language parseLanguage(String value) {
-      switch (value.toLowerCase()) {
-        case 'hindi':
-          return Language.hindi;
-        case 'marathi':
-          return Language.marathi;
-        default:
-          return Language.english;
-      }
-    }
-
     return DoctorProfile(
       doctorId: json['doctorId'] as String,
       name: json['name'] as String,
       specialty: json['specialty'] as String,
       languages: (json['languages'] as List<dynamic>? ?? const [])
-          .map((item) => parseLanguage(item.toString()))
+          .map((item) => _parseLanguage(item.toString()))
           .toList(),
       experienceYears: (json['experienceYears'] as num?)?.toInt() ?? 0,
       fee: (json['fee'] as num?)?.toInt() ?? 0,
@@ -208,6 +243,9 @@ class PatientBackendClient {
       }
     }
 
+    final appointment = json['appointment'] as Map<String, dynamic>?;
+    final prescription = json['prescription'] as Map<String, dynamic>?;
+
     return ConsultationRecord(
       id: json['consultationId'] as String,
       patientId: json['patientId'] as String,
@@ -218,9 +256,23 @@ class PatientBackendClient {
       scheduledAt: DateTime.tryParse(json['scheduledAt'] as String? ?? '') ?? DateTime.now(),
       amountPaid: (json['amountPaid'] as num?)?.toInt() ?? 0,
       followUpRequired: json['followUpRequired'] as bool? ?? false,
-      prescription: null,
-      clinicVisitDate: json['appointmentId'] != null ? 'Scheduled' : null,
-      clinicVisitSlot: null,
+      patientName: json['patientName'] as String?,
+      patientAge: (json['patientAge'] as num?)?.toInt(),
+      patientSex: json['patientSex'] as String?,
+      patientCity: json['patientCity'] as String?,
+      patientMedicalHistory:
+          (json['patientMedicalHistory'] as List<dynamic>? ?? const [])
+              .map((item) => item.toString())
+              .toList(),
+      patientCurrentMedications:
+          (json['patientCurrentMedications'] as List<dynamic>? ?? const [])
+              .map((item) => item.toString())
+              .toList(),
+      doctorName: json['doctorName'] as String?,
+      prescription: prescription?['advice'] as String?,
+      clinicVisitDate: appointment?['date'] as String?,
+      clinicVisitSlot: appointment?['slot'] as String?,
+      videoSession: _parseVideoSession(json['videoSession'] as Map<String, dynamic>?),
     );
   }
 
@@ -266,6 +318,53 @@ class PatientBackendClient {
       token: json['token'] as String,
       patient: _parsePatient(json['patient'] as Map<String, dynamic>),
     );
+  }
+
+  Future<PatientProfile> fetchMe(String token) async {
+    final response = await _httpClient.get(
+      Uri.parse('$_baseUrl/api/patient/me'),
+      headers: _headers(token: token),
+    );
+    if (response.statusCode >= 400) {
+      throw Exception('Patient fetch failed');
+    }
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return _parsePatient(json['patient'] as Map<String, dynamic>);
+  }
+
+  Future<PatientProfile> updateProfile({
+    required String token,
+    required PatientProfile patient,
+  }) async {
+    final response = await _httpClient.put(
+      Uri.parse('$_baseUrl/api/patient/profile'),
+      headers: _headers(token: token),
+      body: jsonEncode({
+        'name': patient.name,
+        'city': patient.city,
+        'preferredLanguage': languageLabel(patient.preferredLanguage),
+        'bmi': patient.bmi,
+        'medicalHistory': patient.medicalHistory,
+        'reports': patient.reports,
+        'metadata': {
+          'heightCm': patient.metadata.heightCm,
+          'weightKg': patient.metadata.weightKg,
+          'bloodGroup': patient.metadata.bloodGroup,
+          'allergies': patient.metadata.allergies,
+          'currentMedications': patient.metadata.currentMedications,
+          'chronicConditions': patient.metadata.chronicConditions,
+          'emergencyContactName': patient.metadata.emergencyContactName,
+          'emergencyContactPhone': patient.metadata.emergencyContactPhone,
+        },
+      }),
+    );
+
+    if (response.statusCode >= 400) {
+      throw Exception('Profile update failed');
+    }
+
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return _parsePatient(json['patient'] as Map<String, dynamic>);
   }
 
   Future<List<DoctorProfile>> fetchDoctors() async {
@@ -377,6 +476,21 @@ class PatientBackendClient {
     return _parseConsultation(json['consultation'] as Map<String, dynamic>);
   }
 
+  Future<ConsultationRecord> prepareVideoSession({
+    required String token,
+    required String consultationId,
+  }) async {
+    final response = await _httpClient.post(
+      Uri.parse('$_baseUrl/api/patient/consultations/$consultationId/join-video'),
+      headers: _headers(token: token),
+    );
+    if (response.statusCode >= 400) {
+      throw Exception('Video session failed');
+    }
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return _parseConsultation(json['consultation'] as Map<String, dynamic>);
+  }
+
   Future<AppointmentItem> createAppointment({
     required String token,
     required String consultationId,
@@ -456,6 +570,11 @@ class PatientBackendClient {
           'preferredLanguage': languageLabel(patient.preferredLanguage),
           'medicalHistory': patient.medicalHistory,
           'reports': patient.reports,
+          'metadata': {
+            'allergies': patient.metadata.allergies,
+            'currentMedications': patient.metadata.currentMedications,
+            'chronicConditions': patient.metadata.chronicConditions,
+          }
         }
       }),
     );

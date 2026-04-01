@@ -35,7 +35,11 @@ export function DoctorWorkspace() {
   }
 
   function toggleAvailability() {
-    const updatedDoctor: DoctorProfile = {
+    if (!doctor) {
+      return;
+    }
+
+    const updatedDoctor = {
       ...doctor,
       online: !doctor.online
     };

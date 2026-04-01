@@ -34,24 +34,37 @@ class DoctorBackendClient {
     };
   }
 
-  DoctorProfile _parseDoctor(Map<String, dynamic> json) {
-    Language parseLanguage(String value) {
-      switch (value.toLowerCase()) {
-        case 'hindi':
-          return Language.hindi;
-        case 'marathi':
-          return Language.marathi;
-        default:
-          return Language.english;
-      }
+  Language _parseLanguage(String value) {
+    switch (value.toLowerCase()) {
+      case 'hindi':
+        return Language.hindi;
+      case 'marathi':
+        return Language.marathi;
+      default:
+        return Language.english;
     }
+  }
 
+  ConsultationVideoSession? _parseVideoSession(Map<String, dynamic>? json) {
+    if (json == null) return null;
+    return ConsultationVideoSession(
+      sessionId: json['sessionId'] as String,
+      provider: json['provider'] as String? ?? 'jitsi',
+      roomName: json['roomName'] as String? ?? '',
+      joinUrl: json['joinUrl'] as String? ?? '',
+      status: json['status'] as String? ?? 'READY',
+      startedAt: DateTime.tryParse(json['startedAt'] as String? ?? ''),
+      expiresAt: DateTime.tryParse(json['expiresAt'] as String? ?? ''),
+    );
+  }
+
+  DoctorProfile _parseDoctor(Map<String, dynamic> json) {
     return DoctorProfile(
       doctorId: json['doctorId'] as String,
       name: json['name'] as String,
       specialty: json['specialty'] as String,
       languages: (json['languages'] as List<dynamic>? ?? const [])
-          .map((item) => parseLanguage(item.toString()))
+          .map((item) => _parseLanguage(item.toString()))
           .toList(),
       experienceYears: (json['experienceYears'] as num?)?.toInt() ?? 0,
       fee: (json['fee'] as num?)?.toInt() ?? 0,
@@ -82,6 +95,9 @@ class DoctorBackendClient {
       }
     }
 
+    final appointment = json['appointment'] as Map<String, dynamic>?;
+    final prescription = json['prescription'] as Map<String, dynamic>?;
+
     return ConsultationRecord(
       id: json['consultationId'] as String,
       patientId: json['patientId'] as String,
@@ -92,9 +108,23 @@ class DoctorBackendClient {
       scheduledAt: DateTime.tryParse(json['scheduledAt'] as String? ?? '') ?? DateTime.now(),
       amountPaid: (json['amountPaid'] as num?)?.toInt() ?? 0,
       followUpRequired: json['followUpRequired'] as bool? ?? false,
-      prescription: null,
-      clinicVisitDate: null,
-      clinicVisitSlot: null,
+      patientName: json['patientName'] as String?,
+      patientAge: (json['patientAge'] as num?)?.toInt(),
+      patientSex: json['patientSex'] as String?,
+      patientCity: json['patientCity'] as String?,
+      patientMedicalHistory:
+          (json['patientMedicalHistory'] as List<dynamic>? ?? const [])
+              .map((item) => item.toString())
+              .toList(),
+      patientCurrentMedications:
+          (json['patientCurrentMedications'] as List<dynamic>? ?? const [])
+              .map((item) => item.toString())
+              .toList(),
+      doctorName: json['doctorName'] as String?,
+      prescription: prescription?['advice'] as String?,
+      clinicVisitDate: appointment?['date'] as String?,
+      clinicVisitSlot: appointment?['slot'] as String?,
+      videoSession: _parseVideoSession(json['videoSession'] as Map<String, dynamic>?),
     );
   }
 
@@ -162,7 +192,7 @@ class DoctorBackendClient {
     return _parseDoctor(json['doctor'] as Map<String, dynamic>);
   }
 
-  Future<void> startConsultation({
+  Future<ConsultationRecord> startConsultation({
     required String token,
     required String consultationId,
   }) async {
@@ -173,9 +203,26 @@ class DoctorBackendClient {
     if (response.statusCode >= 400) {
       throw Exception('Start consultation failed');
     }
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return _parseConsultation(json['consultation'] as Map<String, dynamic>);
   }
 
-  Future<void> requestVisit({
+  Future<ConsultationRecord> fetchConsultation({
+    required String token,
+    required String consultationId,
+  }) async {
+    final response = await _httpClient.get(
+      Uri.parse('$_baseUrl/api/doctor/consultations/$consultationId'),
+      headers: _headers(token: token),
+    );
+    if (response.statusCode >= 400) {
+      throw Exception('Consultation fetch failed');
+    }
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return _parseConsultation(json['consultation'] as Map<String, dynamic>);
+  }
+
+  Future<ConsultationRecord> requestVisit({
     required String token,
     required String consultationId,
   }) async {
@@ -186,9 +233,11 @@ class DoctorBackendClient {
     if (response.statusCode >= 400) {
       throw Exception('Request visit failed');
     }
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return _parseConsultation(json['consultation'] as Map<String, dynamic>);
   }
 
-  Future<void> completeConsultation({
+  Future<ConsultationRecord> completeConsultation({
     required String token,
     required String consultationId,
     required String prescription,
@@ -201,5 +250,7 @@ class DoctorBackendClient {
     if (response.statusCode >= 400) {
       throw Exception('Complete consultation failed');
     }
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return _parseConsultation(json['consultation'] as Map<String, dynamic>);
   }
 }

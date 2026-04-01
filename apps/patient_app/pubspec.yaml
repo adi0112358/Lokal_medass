@@ -13,6 +13,7 @@ dependencies:
   lokal_health_shared:
     path: ../../packages/lokal_health_shared
   shared_preferences: ^2.3.2
+  url_launcher: ^6.3.0
 
 flutter:
   uses-material-design: true

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lokal_health_shared/lokal_health_shared.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import 'api/doctor_backend_client.dart';
 
 class DoctorAppRoot extends StatelessWidget {
@@ -54,6 +56,7 @@ class DoctorHomePage extends StatefulWidget {
 
 class _DoctorHomePageState extends State<DoctorHomePage> {
   static const _doctorTokenKey = 'doctor_auth_token';
+
   final DoctorBackendClient _backendClient = DoctorBackendClient();
   final TextEditingController _emailController =
       TextEditingController(text: 'meera.sharma@lokal.demo');
@@ -106,7 +109,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
     final pages = [
       _buildHome(doctor),
       _buildQueue(),
-      _buildPrescriptionDesk(),
+      _buildConsultationDesk(),
       _buildWallet(doctor),
     ];
 
@@ -139,7 +142,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
           NavigationDestination(icon: Icon(Icons.queue_outlined), label: 'Queue'),
-          NavigationDestination(icon: Icon(Icons.description_outlined), label: 'Rx Desk'),
+          NavigationDestination(icon: Icon(Icons.description_outlined), label: 'Consult'),
           NavigationDestination(icon: Icon(Icons.account_balance_wallet_outlined), label: 'Wallet'),
         ],
       ),
@@ -157,19 +160,13 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
             children: [
               TextField(
                 controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Email'),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Password'),
               ),
               const SizedBox(height: 12),
               if (_authError != null) Text(_authError!, style: const TextStyle(color: Colors.red)),
@@ -191,6 +188,11 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
   }
 
   Widget _buildHome(DoctorProfile doctor) {
+    final active = _queue.cast<ConsultationRecord?>().firstWhere(
+          (record) => record != null && record.status == ConsultationStatus.inCall,
+          orElse: () => null,
+        );
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -227,6 +229,32 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
             ],
           ),
         ),
+        if (active != null)
+          _InfoCard(
+            title: 'Active video consultation',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${active.patientName ?? active.patientId} • ${active.concern}'),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _DoctorStatusPill(label: active.status.name, highlighted: true),
+                    if (active.videoSession != null)
+                      _DoctorStatusPill(label: active.videoSession!.provider),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                FilledButton.tonalIcon(
+                  onPressed: () => _openVideoSession(active),
+                  icon: const Icon(Icons.videocam_outlined),
+                  label: const Text('Open active room'),
+                ),
+              ],
+            ),
+          ),
         _InfoCard(
           title: 'Operational summary',
           child: Wrap(
@@ -253,83 +281,176 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
           style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
-        const Text('Attend queued requests one by one and escalate to clinic visit when needed.'),
+        const Text(
+          'Attend queued requests one by one, review metadata, and escalate to clinic visit when needed.',
+        ),
         const SizedBox(height: 16),
         ..._queue.map(
           (record) => Card(
             margin: const EdgeInsets.only(bottom: 14),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(record.id, style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 8),
-                  Text(record.concern),
-                  const SizedBox(height: 12),
-                  _DoctorStatusPill(
-                    label: record.status.name,
-                    highlighted: record.status == ConsultationStatus.inCall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Amount paid: Rs ${record.amountPaid}'),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: () => _startConsultation(record),
-                          child: const Text('Start call'),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(24),
+              onTap: () {
+                setState(() {
+                  _selected = record;
+                  _prescriptionController.text = record.prescription ?? '';
+                  _currentIndex = 2;
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            record.patientName ?? record.id,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton.tonal(
-                          onPressed: () => _requestVisit(record),
-                          child: const Text('Request visit'),
+                        _DoctorStatusPill(
+                          label: record.status.name,
+                          highlighted: record.status == ConsultationStatus.inCall,
                         ),
-                      ),
-                    ],
-                  )
-                ],
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${record.patientAge ?? '-'} yrs • ${record.patientSex ?? 'NA'} • ${record.patientCity ?? 'Unknown city'}',
+                    ),
+                    const SizedBox(height: 10),
+                    Text(record.concern),
+                    const SizedBox(height: 10),
+                    Text(
+                      'History: ${record.patientMedicalHistory.isEmpty ? 'No major history' : record.patientMedicalHistory.join(', ')}',
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Current meds: ${record.patientCurrentMedications.isEmpty ? 'None listed' : record.patientCurrentMedications.join(', ')}',
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(child: Text('Amount paid: Rs ${record.amountPaid}')),
+                        Expanded(
+                          child: Text(
+                            record.videoSession != null
+                                ? 'Video ${record.videoSession!.status.toLowerCase()}'
+                                : 'Video not started',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () => _startConsultation(record),
+                            child: Text(
+                              record.videoSession != null ? 'Open call' : 'Start call',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton.tonal(
+                            onPressed: () => _requestVisit(record),
+                            child: const Text('Request visit'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        )
+        ),
       ],
     );
   }
 
-  Widget _buildPrescriptionDesk() {
+  Widget _buildConsultationDesk() {
+    final selected = _selected;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         _InfoCard(
-          title: 'E-prescription desk',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(_selected?.id ?? 'No consultation selected'),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _prescriptionController,
-                maxLines: 6,
-                decoration: const InputDecoration(
-                  hintText: 'Write dosage, precautions, and follow-up instructions',
-                  border: OutlineInputBorder(),
+          title: 'Consultation desk',
+          child: selected == null
+              ? const Text('Select a queued consultation to review patient context and issue a prescription.')
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${selected.patientName ?? selected.patientId} • ${selected.concern}',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _DoctorStatusPill(label: selected.status.name, highlighted: true),
+                        if (selected.videoSession != null)
+                          _DoctorStatusPill(label: selected.videoSession!.provider),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Patient snapshot: ${selected.patientAge ?? '-'} yrs, ${selected.patientSex ?? 'NA'}, ${selected.patientCity ?? 'Unknown city'}',
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Medical history: ${selected.patientMedicalHistory.isEmpty ? 'No major history' : selected.patientMedicalHistory.join(', ')}',
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Current medications: ${selected.patientCurrentMedications.isEmpty ? 'None listed' : selected.patientCurrentMedications.join(', ')}',
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton.tonalIcon(
+                            onPressed: () => _startConsultation(selected),
+                            icon: const Icon(Icons.videocam_outlined),
+                            label: Text(
+                              selected.videoSession != null ? 'Re-open room' : 'Start video room',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton.tonal(
+                            onPressed: () => _requestVisit(selected),
+                            child: const Text('Mark follow-up'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _prescriptionController,
+                      maxLines: 6,
+                      decoration: const InputDecoration(
+                        hintText: 'Write dosage, precautions, and follow-up instructions',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: _completeConsultation,
+                        child: const Text('Complete consultation'),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _selected == null ? null : _completeConsultation,
-                  child: const Text('Complete consultation'),
-                ),
-              ),
-            ],
-          ),
-        )
+        ),
       ],
     );
   }
@@ -347,10 +468,12 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
               const SizedBox(height: 8),
               Text('Ready for bank transfer: Rs ${doctor.nextPayoutEligible}'),
               const SizedBox(height: 8),
-              const Text('Production flow: Razorpay settlement -> payout scheduler -> linked bank account'),
+              const Text(
+                'Production flow: payment capture -> settlement ledger -> payout scheduler -> linked bank account',
+              ),
             ],
           ),
-        )
+        ),
       ],
     );
   }
@@ -402,6 +525,9 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
         if (_selected != null) {
           final matches = queue.where((item) => item.id == _selected!.id);
           _selected = matches.isNotEmpty ? matches.first : _selected;
+          if (_selected != null) {
+            _prescriptionController.text = _selected!.prescription ?? _prescriptionController.text;
+          }
         }
         _screenLoading = false;
       });
@@ -431,16 +557,17 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
     final token = _token;
     if (token == null) return;
     try {
-      await _backendClient.startConsultation(
+      final updated = await _backendClient.startConsultation(
         token: token,
         consultationId: record.id,
       );
       if (!mounted) return;
       setState(() {
-        _selected = record.copyWith(status: ConsultationStatus.inCall);
+        _selected = updated;
         _currentIndex = 2;
       });
       await _refresh();
+      await _openVideoSession(updated);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -453,10 +580,14 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
     final token = _token;
     if (token == null) return;
     try {
-      await _backendClient.requestVisit(
+      final updated = await _backendClient.requestVisit(
         token: token,
         consultationId: record.id,
       );
+      if (!mounted) return;
+      setState(() {
+        _selected = updated;
+      });
       await _refresh();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -501,6 +632,28 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not complete consultation.')),
+      );
+    }
+  }
+
+  Future<void> _openVideoSession(ConsultationRecord record) async {
+    final joinUrl = record.videoSession?.joinUrl;
+    if (joinUrl == null || joinUrl.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Video room is not ready yet.')),
+      );
+      return;
+    }
+
+    final launched = await launchUrl(
+      Uri.parse(joinUrl),
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the video room on this device.')),
       );
     }
   }
@@ -574,7 +727,10 @@ class _InfoCard extends StatelessWidget {
 }
 
 class _StatTile extends StatelessWidget {
-  const _StatTile({required this.label, required this.value});
+  const _StatTile({
+    required this.label,
+    required this.value,
+  });
 
   final String label;
   final String value;
@@ -585,13 +741,13 @@ class _StatTile extends StatelessWidget {
       width: 140,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        color: const Color(0xFFEAF3FF),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label),
+          Text(label, style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 6),
           Text(value, style: Theme.of(context).textTheme.titleLarge),
         ],
@@ -614,7 +770,7 @@ class _DoctorStatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: highlighted ? const Color(0xFFE4EFFC) : const Color(0xFFF0F3F8),
+        color: highlighted ? const Color(0xFFDCEBFF) : const Color(0xFFEDEFF3),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
@@ -622,7 +778,7 @@ class _DoctorStatusPill extends StatelessWidget {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: highlighted ? const Color(0xFF124E96) : const Color(0xFF4E5D75),
+          color: highlighted ? const Color(0xFF124E96) : const Color(0xFF49586A),
         ),
       ),
     );

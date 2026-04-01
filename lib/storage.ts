@@ -1,12 +1,32 @@
 "use client";
 
 import { demoStore } from "@/lib/mock-data";
-import { ChatMessage, ConsultationRecord, DemoStore, DoctorProfile, Feedback } from "@/lib/types";
+import {
+  ChatMessage,
+  ConsultationRecord,
+  DemoStore,
+  DoctorProfile,
+  Feedback,
+  JobApplication
+} from "@/lib/types";
 
 const STORAGE_KEY = "lokal-medassist-demo-store";
 
 function canUseStorage() {
   return typeof window !== "undefined";
+}
+
+function normalizeStore(input: Partial<DemoStore> | null | undefined): DemoStore {
+  return {
+    ...demoStore,
+    ...input,
+    patient: input?.patient ?? demoStore.patient,
+    doctors: Array.isArray(input?.doctors) ? input.doctors : demoStore.doctors,
+    consultations: Array.isArray(input?.consultations) ? input.consultations : demoStore.consultations,
+    feedback: Array.isArray(input?.feedback) ? input.feedback : demoStore.feedback,
+    chat: Array.isArray(input?.chat) ? input.chat : demoStore.chat,
+    applications: Array.isArray(input?.applications) ? input.applications : []
+  };
 }
 
 export function readStore(): DemoStore {
@@ -21,7 +41,10 @@ export function readStore(): DemoStore {
   }
 
   try {
-    return JSON.parse(raw) as DemoStore;
+    const parsed = JSON.parse(raw) as Partial<DemoStore>;
+    const normalized = normalizeStore(parsed);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    return normalized;
   } catch {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(demoStore));
     return demoStore;
@@ -120,4 +143,16 @@ export function updateDoctorProfile(updatedDoctor: DoctorProfile) {
       doctor.doctorId === updatedDoctor.doctorId ? updatedDoctor : doctor
     )
   });
+}
+
+export function submitJobApplication(application: JobApplication) {
+  const store = readStore();
+  writeStore({
+    ...store,
+    applications: [application, ...store.applications]
+  });
+}
+
+export function readJobApplications() {
+  return readStore().applications;
 }

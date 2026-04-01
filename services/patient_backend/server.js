@@ -1,7 +1,17 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
-import { attachPatientAuth, authenticateDoctor, authenticatePatient, hashPassword, issueDoctorToken, issuePatientToken, sanitizeDoctor, sanitizePatient, verifyPassword } from "./src/auth.js";
+import {
+  attachPatientAuth,
+  authenticateDoctor,
+  authenticatePatient,
+  hashPassword,
+  issueDoctorToken,
+  issuePatientToken,
+  sanitizeDoctor,
+  sanitizePatient,
+  verifyPassword
+} from "./src/auth.js";
 import { readStore, updateStore, getStorePath } from "./src/store.js";
 import { createId, createPatientId, nowIso, titleFromMessage } from "./src/utils.js";
 
@@ -27,6 +37,117 @@ const emergencyPatterns = [
 
 app.use(cors());
 app.use(express.json());
+
+function normalizeStringList(input) {
+  if (!Array.isArray(input)) {
+    return [];
+  }
+
+  return input
+    .map((item) => String(item).trim())
+    .filter(Boolean);
+}
+
+function calculateBmi(heightCm, weightKg, fallbackBmi = 0) {
+  if (!heightCm || !weightKg) {
+    return fallbackBmi;
+  }
+
+  const heightM = Number(heightCm) / 100;
+  if (!heightM) {
+    return fallbackBmi;
+  }
+
+  return Number((Number(weightKg) / (heightM * heightM)).toFixed(1));
+}
+
+function buildVideoRoomName(consultationId) {
+  return `lokal-${consultationId.toLowerCase()}`;
+}
+
+function serializeVideoSession(videoSession) {
+  if (!videoSession) {
+    return null;
+  }
+
+  return {
+    sessionId: videoSession.sessionId,
+    provider: videoSession.provider,
+    roomName: videoSession.roomName,
+    joinUrl: videoSession.joinUrl,
+    status: videoSession.status,
+    startedAt: videoSession.startedAt ?? null,
+    expiresAt: videoSession.expiresAt ?? null
+  };
+}
+
+function serializeConsultation(store, consultation) {
+  const patient = store.patients.find((item) => item.patientId === consultation.patientId);
+  const doctor = store.doctors.find((item) => item.doctorId === consultation.doctorId);
+  const appointment = consultation.appointmentId
+    ? store.appointments.find((item) => item.appointmentId === consultation.appointmentId)
+    : null;
+  const prescription = consultation.prescriptionId
+    ? store.prescriptions.find((item) => item.prescriptionId === consultation.prescriptionId)
+    : null;
+  const videoSession = store.videoSessions.find(
+    (item) => item.consultationId === consultation.consultationId
+  );
+
+  return {
+    ...consultation,
+    patientName: patient?.name ?? null,
+    patientAge: patient?.age ?? null,
+    patientSex: patient?.sex ?? null,
+    patientCity: patient?.city ?? null,
+    patientMedicalHistory: patient?.medicalHistory ?? [],
+    patientCurrentMedications: patient?.metadata?.currentMedications ?? [],
+    patientMetadata: patient?.metadata ?? null,
+    doctorName: doctor?.name ?? null,
+    doctorSpecialty: doctor?.specialty ?? null,
+    prescription,
+    appointment,
+    videoSession: serializeVideoSession(videoSession)
+  };
+}
+
+function ensureVideoSession(store, consultation, { live = false } = {}) {
+  const now = nowIso();
+  const roomName = buildVideoRoomName(consultation.consultationId);
+  const joinUrl = `https://meet.jit.si/${roomName}`;
+  const existingSession = store.videoSessions.find(
+    (item) => item.consultationId === consultation.consultationId
+  );
+
+  const nextSession = existingSession
+    ? {
+        ...existingSession,
+        provider: "jitsi",
+        roomName,
+        joinUrl,
+        status: live ? "LIVE" : existingSession.status ?? "READY",
+        startedAt: live ? existingSession.startedAt ?? now : existingSession.startedAt ?? null
+      }
+    : {
+        sessionId: createId("VID"),
+        consultationId: consultation.consultationId,
+        provider: "jitsi",
+        roomName,
+        joinUrl,
+        status: live ? "LIVE" : "READY",
+        createdAt: now,
+        startedAt: live ? now : null,
+        expiresAt: null
+      };
+
+  const videoSessions = existingSession
+    ? store.videoSessions.map((item) =>
+        item.consultationId === consultation.consultationId ? nextSession : item
+      )
+    : [nextSession, ...store.videoSessions];
+
+  return { videoSessions, videoSession: nextSession };
+}
 
 function resolvePatient(request, response) {
   const store = readStore();
@@ -160,6 +281,12 @@ app.post("/api/patient/auth/register", (request, response) => {
       preferredLanguage: String(preferredLanguage),
       medicalHistory: [],
       reports: [],
+      metadata: {
+        allergies: [],
+        currentMedications: [],
+        chronicConditions: [],
+        lastUpdated: nowIso()
+      },
       previousConsultations: 0,
       createdAt: nowIso()
     };
@@ -245,6 +372,85 @@ app.get("/api/patient/me", authenticatePatient, (request, response) => {
   });
 });
 
+app.put("/api/patient/profile", authenticatePatient, (request, response) => {
+  const payload = request.body ?? {};
+
+  const updatedStore = updateStore((store) => {
+    const patient = store.patients.find((item) => item.patientId === request.auth.sub);
+    if (!patient) {
+      throw new Error("patient_not_found");
+    }
+
+    const incomingMetadata = payload.metadata ?? {};
+    const nextMetadata = {
+      allergies: normalizeStringList(
+        incomingMetadata.allergies ?? patient.metadata?.allergies
+      ),
+      currentMedications: normalizeStringList(
+        incomingMetadata.currentMedications ?? patient.metadata?.currentMedications
+      ),
+      chronicConditions: normalizeStringList(
+        incomingMetadata.chronicConditions ?? patient.metadata?.chronicConditions
+      ),
+      heightCm:
+        incomingMetadata.heightCm != null
+          ? Number(incomingMetadata.heightCm)
+          : patient.metadata?.heightCm ?? null,
+      weightKg:
+        incomingMetadata.weightKg != null
+          ? Number(incomingMetadata.weightKg)
+          : patient.metadata?.weightKg ?? null,
+      bloodGroup:
+        incomingMetadata.bloodGroup != null
+          ? String(incomingMetadata.bloodGroup).trim()
+          : patient.metadata?.bloodGroup ?? null,
+      emergencyContactName:
+        incomingMetadata.emergencyContactName != null
+          ? String(incomingMetadata.emergencyContactName).trim()
+          : patient.metadata?.emergencyContactName ?? null,
+      emergencyContactPhone:
+        incomingMetadata.emergencyContactPhone != null
+          ? String(incomingMetadata.emergencyContactPhone).trim()
+          : patient.metadata?.emergencyContactPhone ?? null,
+      lastUpdated: nowIso()
+    };
+
+    const nextBmi = payload.bmi != null
+      ? Number(payload.bmi)
+      : calculateBmi(nextMetadata.heightCm, nextMetadata.weightKg, patient.bmi);
+
+    return {
+      ...store,
+      patients: store.patients.map((item) =>
+        item.patientId === request.auth.sub
+          ? {
+              ...item,
+              name: payload.name != null ? String(payload.name).trim() : item.name,
+              city: payload.city != null ? String(payload.city).trim() : item.city,
+              preferredLanguage:
+                payload.preferredLanguage != null
+                  ? String(payload.preferredLanguage).trim()
+                  : item.preferredLanguage,
+              bmi: nextBmi,
+              medicalHistory:
+                payload.medicalHistory != null
+                  ? normalizeStringList(payload.medicalHistory)
+                  : item.medicalHistory,
+              reports:
+                payload.reports != null
+                  ? normalizeStringList(payload.reports)
+                  : item.reports,
+              metadata: nextMetadata
+            }
+          : item
+      )
+    };
+  });
+
+  const patient = updatedStore.patients.find((item) => item.patientId === request.auth.sub);
+  return response.json({ patient: sanitizePatient(patient) });
+});
+
 app.get("/api/patient/chats", authenticatePatient, (request, response) => {
   const store = readStore();
   const conversations = store.conversations
@@ -289,7 +495,7 @@ app.post("/api/patient/chat", attachPatientAuth, async (request, response) => {
     });
 
     const patientConversationId = conversationId || createId("CHAT");
-    const updatedStore = updateStore((store) => {
+    updateStore((store) => {
       const patientMessage = {
         id: createId("MSG"),
         sender: "patient",
@@ -341,12 +547,6 @@ app.post("/api/patient/chat", attachPatientAuth, async (request, response) => {
       };
     });
 
-    const conversation = updatedStore.conversations.find(
-      (item) =>
-        item.patientId === resolved.patient.patientId &&
-        item.messages.some((entry) => entry.text === normalizedMessage)
-    );
-
     return response.json({
       conversationId: patientConversationId,
       ...triage
@@ -360,7 +560,7 @@ app.post("/api/patient/chat", attachPatientAuth, async (request, response) => {
 app.get("/api/doctors", (_request, response) => {
   const store = readStore();
   return response.json({
-    doctors: store.doctors
+    doctors: store.doctors.map((doctor) => sanitizeDoctor(doctor))
   });
 });
 
@@ -371,7 +571,7 @@ app.get("/api/doctors/:doctorId", (_request, response) => {
     return response.status(404).json({ error: "doctor_not_found" });
   }
 
-  return response.json({ doctor });
+  return response.json({ doctor: sanitizeDoctor(doctor) });
 });
 
 app.get("/api/doctor/queue", authenticateDoctor, (request, response) => {
@@ -382,9 +582,27 @@ app.get("/api/doctor/queue", authenticateDoctor, (request, response) => {
         item.doctorId === request.auth.sub &&
         (item.status === "QUEUED" || item.status === "IN_CALL" || item.status === "FOLLOW_UP")
     )
-    .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+    .map((item) => serializeConsultation(store, item));
 
   return response.json({ consultations });
+});
+
+app.get("/api/doctor/consultations/:consultationId", authenticateDoctor, (request, response) => {
+  const store = readStore();
+  const consultation = store.consultations.find(
+    (item) =>
+      item.consultationId === request.params.consultationId &&
+      item.doctorId === request.auth.sub
+  );
+
+  if (!consultation) {
+    return response.status(404).json({ error: "consultation_not_found" });
+  }
+
+  return response.json({
+    consultation: serializeConsultation(store, consultation)
+  });
 });
 
 app.post("/api/doctor/availability", authenticateDoctor, (request, response) => {
@@ -407,29 +625,43 @@ app.post("/api/doctor/availability", authenticateDoctor, (request, response) => 
 app.post("/api/doctor/consultations/:consultationId/start", authenticateDoctor, (request, response) => {
   const consultationId = request.params.consultationId;
 
-  const updatedStore = updateStore((store) => ({
-    ...store,
-    consultations: store.consultations.map((item) =>
-      item.consultationId === consultationId && item.doctorId === request.auth.sub
-        ? { ...item, status: "IN_CALL" }
-        : item
-    ),
-    doctors: store.doctors.map((item) =>
-      item.doctorId === request.auth.sub
-        ? { ...item, queueCount: item.queueCount > 0 ? item.queueCount - 1 : 0 }
-        : item
-    )
-  }));
+  const updatedStore = updateStore((store) => {
+    const consultation = store.consultations.find(
+      (item) => item.consultationId === consultationId && item.doctorId === request.auth.sub
+    );
+
+    if (!consultation) {
+      throw new Error("consultation_not_found");
+    }
+
+    const { videoSessions } = ensureVideoSession(store, consultation, { live: true });
+
+    return {
+      ...store,
+      videoSessions,
+      consultations: store.consultations.map((item) =>
+        item.consultationId === consultationId && item.doctorId === request.auth.sub
+          ? { ...item, status: "IN_CALL" }
+          : item
+      ),
+      doctors: store.doctors.map((item) =>
+        item.doctorId === request.auth.sub
+          ? { ...item, queueCount: item.queueCount > 0 ? item.queueCount - 1 : 0 }
+          : item
+      )
+    };
+  });
 
   const consultation = updatedStore.consultations.find(
     (item) => item.consultationId === consultationId && item.doctorId === request.auth.sub
   );
 
-  if (!consultation) {
-    return response.status(404).json({ error: "consultation_not_found" });
-  }
-
-  return response.json({ consultation });
+  return response.json({
+    consultation: serializeConsultation(updatedStore, consultation),
+    videoSession: serializeVideoSession(
+      updatedStore.videoSessions.find((item) => item.consultationId === consultationId)
+    )
+  });
 });
 
 app.post("/api/doctor/consultations/:consultationId/request-visit", authenticateDoctor, (request, response) => {
@@ -452,7 +684,9 @@ app.post("/api/doctor/consultations/:consultationId/request-visit", authenticate
     return response.status(404).json({ error: "consultation_not_found" });
   }
 
-  return response.json({ consultation });
+  return response.json({
+    consultation: serializeConsultation(updatedStore, consultation)
+  });
 });
 
 app.post("/api/doctor/consultations/:consultationId/complete", authenticateDoctor, (request, response) => {
@@ -504,6 +738,11 @@ app.post("/api/doctor/consultations/:consultationId/complete", authenticateDocto
             }
           : item
       ),
+      videoSessions: store.videoSessions.map((item) =>
+        item.consultationId === consultationId
+          ? { ...item, status: "ENDED", expiresAt: nowIso() }
+          : item
+      ),
       prescriptions: existingPrescription
         ? store.prescriptions.map((item) =>
             item.prescriptionId === prescriptionId ? prescriptionRecord : item
@@ -530,7 +769,7 @@ app.post("/api/doctor/consultations/:consultationId/complete", authenticateDocto
   );
 
   return response.json({
-    consultation,
+    consultation: serializeConsultation(updatedStore, consultation),
     prescription: prescriptionRecord
   });
 });
@@ -550,11 +789,28 @@ app.get("/api/doctor/wallet", authenticateDoctor, (request, response) => {
 
 app.get("/api/patient/bookings", authenticatePatient, (request, response) => {
   const store = readStore();
-  const consultations = store.consultations.filter(
-    (item) => item.patientId === request.auth.sub
-  );
+  const consultations = store.consultations
+    .filter((item) => item.patientId === request.auth.sub)
+    .map((item) => serializeConsultation(store, item));
 
   return response.json({ consultations });
+});
+
+app.get("/api/patient/consultations/:consultationId", authenticatePatient, (request, response) => {
+  const store = readStore();
+  const consultation = store.consultations.find(
+    (item) =>
+      item.consultationId === request.params.consultationId &&
+      item.patientId === request.auth.sub
+  );
+
+  if (!consultation) {
+    return response.status(404).json({ error: "consultation_not_found" });
+  }
+
+  return response.json({
+    consultation: serializeConsultation(store, consultation)
+  });
 });
 
 app.post("/api/patient/bookings", authenticatePatient, (request, response) => {
@@ -565,8 +821,12 @@ app.post("/api/patient/bookings", authenticatePatient, (request, response) => {
 
   const updatedStore = updateStore((store) => {
     const doctor = store.doctors.find((item) => item.doctorId === doctorId);
+    const patient = store.patients.find((item) => item.patientId === request.auth.sub);
     if (!doctor) {
       throw new Error("doctor_not_found");
+    }
+    if (!patient) {
+      throw new Error("patient_not_found");
     }
 
     const consultation = {
@@ -587,6 +847,14 @@ app.post("/api/patient/bookings", authenticatePatient, (request, response) => {
     return {
       ...store,
       consultations: [consultation, ...store.consultations],
+      patients: store.patients.map((item) =>
+        item.patientId === request.auth.sub
+          ? {
+              ...item,
+              previousConsultations: (item.previousConsultations ?? 0) + 1
+            }
+          : item
+      ),
       doctors: store.doctors.map((item) =>
         item.doctorId === doctorId
           ? {
@@ -600,8 +868,43 @@ app.post("/api/patient/bookings", authenticatePatient, (request, response) => {
     };
   });
 
-  const consultation = updatedStore.consultations[0];
-  return response.status(201).json({ consultation });
+  return response.status(201).json({
+    consultation: serializeConsultation(updatedStore, updatedStore.consultations[0])
+  });
+});
+
+app.post("/api/patient/consultations/:consultationId/join-video", authenticatePatient, (request, response) => {
+  const consultationId = request.params.consultationId;
+
+  const updatedStore = updateStore((store) => {
+    const consultation = store.consultations.find(
+      (item) =>
+        item.consultationId === consultationId &&
+        item.patientId === request.auth.sub &&
+        item.recommendedMode === "VIDEO_CALL"
+    );
+
+    if (!consultation) {
+      throw new Error("consultation_not_found");
+    }
+
+    const { videoSessions } = ensureVideoSession(store, consultation);
+    return {
+      ...store,
+      videoSessions
+    };
+  });
+
+  const consultation = updatedStore.consultations.find(
+    (item) => item.consultationId === consultationId && item.patientId === request.auth.sub
+  );
+
+  return response.json({
+    consultation: serializeConsultation(updatedStore, consultation),
+    videoSession: serializeVideoSession(
+      updatedStore.videoSessions.find((item) => item.consultationId === consultationId)
+    )
+  });
 });
 
 app.get("/api/patient/appointments", authenticatePatient, (request, response) => {
@@ -742,6 +1045,9 @@ app.use((error, _request, response, _next) => {
   }
   if (error?.message === "doctor_not_found") {
     return response.status(404).json({ error: "doctor_not_found" });
+  }
+  if (error?.message === "patient_not_found") {
+    return response.status(404).json({ error: "patient_not_found" });
   }
   if (error?.message === "consultation_not_found") {
     return response.status(404).json({ error: "consultation_not_found" });

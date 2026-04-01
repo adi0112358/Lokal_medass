@@ -10,3 +10,4 @@ coverage
 build
 .env
 services/patient_backend/data/store.json
+.vercel

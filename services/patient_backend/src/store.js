@@ -5,7 +5,10 @@ import { initialStore } from "./seed.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const dataDirectory = path.join(__dirname, "..", "data");
+const configuredDataDirectory = process.env.DATA_DIR;
+const dataDirectory = configuredDataDirectory
+  ? path.resolve(configuredDataDirectory)
+  : path.join(__dirname, "..", "data");
 const storePath = path.join(dataDirectory, "store.json");
 
 function ensureStoreFile() {
@@ -20,7 +23,25 @@ function ensureStoreFile() {
 
 export function readStore() {
   ensureStoreFile();
-  return JSON.parse(fs.readFileSync(storePath, "utf8"));
+  const parsed = JSON.parse(fs.readFileSync(storePath, "utf8"));
+  return {
+    ...parsed,
+    patients: (parsed.patients ?? []).map((patient) => ({
+      ...patient,
+      metadata: {
+        allergies: [],
+        currentMedications: [],
+        chronicConditions: [],
+        ...patient.metadata
+      }
+    })),
+    videoSessions: parsed.videoSessions ?? [],
+    conversations: parsed.conversations ?? [],
+    consultations: parsed.consultations ?? [],
+    appointments: parsed.appointments ?? [],
+    prescriptions: parsed.prescriptions ?? [],
+    feedback: parsed.feedback ?? []
+  };
 }
 
 export function writeStore(nextStore) {

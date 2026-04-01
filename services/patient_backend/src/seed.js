@@ -14,6 +14,17 @@ export const initialStore = {
       preferredLanguage: "Hindi",
       medicalHistory: ["Seasonal allergies", "Mild anemia in 2024"],
       reports: ["CBC Report - Jan 2026", "Vitamin Panel - Feb 2026"],
+      metadata: {
+        heightCm: 162,
+        weightKg: 63,
+        bloodGroup: "B+",
+        allergies: ["Dust", "Pollen"],
+        currentMedications: ["Iron supplement"],
+        chronicConditions: ["Acidity episodes"],
+        emergencyContactName: "Rahul Verma",
+        emergencyContactPhone: "+91 9000000000",
+        lastUpdated: "2026-03-24T08:00:00.000Z"
+      },
       previousConsultations: 14,
       createdAt: "2026-03-20T09:00:00.000Z"
     }
@@ -89,6 +100,19 @@ export const initialStore = {
           createdAt: "2026-03-26T10:00:00.000Z"
         }
       ]
+    }
+  ],
+  videoSessions: [
+    {
+      sessionId: "VID-2001",
+      consultationId: "CONS-7601",
+      provider: "jitsi",
+      roomName: "lokal-cons-7601",
+      joinUrl: "https://meet.jit.si/lokal-cons-7601",
+      status: "LIVE",
+      createdAt: "2026-03-23T10:25:00.000Z",
+      startedAt: "2026-03-23T10:30:00.000Z",
+      expiresAt: null
     }
   ],
   consultations: [

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Lokal MedAssist",
+  title: "MedBuddy",
   description:
-    "A proposal-ready medical assistance platform for tier 2 and tier 3 cities with AI triage and doctor consultations."
+    "MedBuddy is an AI-assisted personalized three-layer medical assistance and consultation platform."
 };
 
 export default function RootLayout({

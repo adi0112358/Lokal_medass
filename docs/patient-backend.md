@@ -5,11 +5,13 @@
 The patient backend is now a persistent file-backed API with:
 
 - patient auth
+- patient metadata/profile management
 - doctor auth
 - patient profile lookup
 - AI chat with saved chat history
 - doctor listing
 - doctor booking
+- video consultation session preparation
 - appointment APIs
 - prescription APIs
 - feedback APIs
@@ -105,6 +107,10 @@ Response:
 
 ### `GET /api/patient/me`
 
+### `PUT /api/patient/profile`
+
+Updates patient metadata such as allergies, current medications, chronic conditions, emergency contact, and physical stats.
+
 Requires:
 
 ```text
@@ -161,6 +167,16 @@ Response:
 ### `GET /api/doctors`
 
 ### `GET /api/doctors/:doctorId`
+
+## Consultation Detail & Video APIs
+
+### `GET /api/patient/consultations/:consultationId`
+
+### `POST /api/patient/consultations/:consultationId/join-video`
+
+Creates or returns a 1:1 consultation video session. The current MVP uses a Jitsi room URL so patient and doctor can join the same room without provider keys.
+
+### `GET /api/doctor/consultations/:consultationId`
 
 ## Booking APIs
 
@@ -237,6 +253,8 @@ Request body:
 
 ### `POST /api/doctor/consultations/:consultationId/start`
 
+Starts the consultation and prepares a live video room.
+
 ### `POST /api/doctor/consultations/:consultationId/request-visit`
 
 ### `POST /api/doctor/consultations/:consultationId/complete`
@@ -255,5 +273,5 @@ Request body:
 
 - passwords are hashed for this local demo backend
 - persistence is file-based, not production-grade database storage
-- the current Flutter patient app is only wired to the chat endpoint so far
-- next step is to wire auth, doctor list, and bookings into the patient app UI
+- video calling currently uses shared Jitsi room URLs for a practical 1:1 MVP flow
+- the Flutter apps now use backend-driven auth, profile, queue, booking, appointment, prescription, feedback, and video session flows

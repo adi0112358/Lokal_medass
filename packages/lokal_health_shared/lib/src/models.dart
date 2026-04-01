@@ -9,6 +9,94 @@ enum ConsultationStatus {
   completed,
 }
 
+class PatientMetadata {
+  const PatientMetadata({
+    this.heightCm,
+    this.weightKg,
+    this.bloodGroup,
+    this.allergies = const [],
+    this.currentMedications = const [],
+    this.chronicConditions = const [],
+    this.emergencyContactName,
+    this.emergencyContactPhone,
+    this.lastUpdated,
+  });
+
+  final double? heightCm;
+  final double? weightKg;
+  final String? bloodGroup;
+  final List<String> allergies;
+  final List<String> currentMedications;
+  final List<String> chronicConditions;
+  final String? emergencyContactName;
+  final String? emergencyContactPhone;
+  final DateTime? lastUpdated;
+
+  PatientMetadata copyWith({
+    double? heightCm,
+    double? weightKg,
+    String? bloodGroup,
+    List<String>? allergies,
+    List<String>? currentMedications,
+    List<String>? chronicConditions,
+    String? emergencyContactName,
+    String? emergencyContactPhone,
+    DateTime? lastUpdated,
+  }) {
+    return PatientMetadata(
+      heightCm: heightCm ?? this.heightCm,
+      weightKg: weightKg ?? this.weightKg,
+      bloodGroup: bloodGroup ?? this.bloodGroup,
+      allergies: allergies ?? this.allergies,
+      currentMedications: currentMedications ?? this.currentMedications,
+      chronicConditions: chronicConditions ?? this.chronicConditions,
+      emergencyContactName: emergencyContactName ?? this.emergencyContactName,
+      emergencyContactPhone: emergencyContactPhone ?? this.emergencyContactPhone,
+      lastUpdated: lastUpdated ?? this.lastUpdated,
+    );
+  }
+}
+
+class ConsultationVideoSession {
+  const ConsultationVideoSession({
+    required this.sessionId,
+    required this.provider,
+    required this.roomName,
+    required this.joinUrl,
+    required this.status,
+    this.startedAt,
+    this.expiresAt,
+  });
+
+  final String sessionId;
+  final String provider;
+  final String roomName;
+  final String joinUrl;
+  final String status;
+  final DateTime? startedAt;
+  final DateTime? expiresAt;
+
+  ConsultationVideoSession copyWith({
+    String? sessionId,
+    String? provider,
+    String? roomName,
+    String? joinUrl,
+    String? status,
+    DateTime? startedAt,
+    DateTime? expiresAt,
+  }) {
+    return ConsultationVideoSession(
+      sessionId: sessionId ?? this.sessionId,
+      provider: provider ?? this.provider,
+      roomName: roomName ?? this.roomName,
+      joinUrl: joinUrl ?? this.joinUrl,
+      status: status ?? this.status,
+      startedAt: startedAt ?? this.startedAt,
+      expiresAt: expiresAt ?? this.expiresAt,
+    );
+  }
+}
+
 class PatientProfile {
   const PatientProfile({
     required this.patientId,
@@ -21,6 +109,7 @@ class PatientProfile {
     required this.medicalHistory,
     required this.reports,
     required this.previousConsultations,
+    this.metadata = const PatientMetadata(),
   });
 
   final String patientId;
@@ -33,6 +122,36 @@ class PatientProfile {
   final List<String> medicalHistory;
   final List<String> reports;
   final int previousConsultations;
+  final PatientMetadata metadata;
+
+  PatientProfile copyWith({
+    String? patientId,
+    String? name,
+    int? age,
+    String? sex,
+    double? bmi,
+    String? city,
+    Language? preferredLanguage,
+    List<String>? medicalHistory,
+    List<String>? reports,
+    int? previousConsultations,
+    PatientMetadata? metadata,
+  }) {
+    return PatientProfile(
+      patientId: patientId ?? this.patientId,
+      name: name ?? this.name,
+      age: age ?? this.age,
+      sex: sex ?? this.sex,
+      bmi: bmi ?? this.bmi,
+      city: city ?? this.city,
+      preferredLanguage: preferredLanguage ?? this.preferredLanguage,
+      medicalHistory: medicalHistory ?? this.medicalHistory,
+      reports: reports ?? this.reports,
+      previousConsultations:
+          previousConsultations ?? this.previousConsultations,
+      metadata: metadata ?? this.metadata,
+    );
+  }
 }
 
 class DoctorProfile {
@@ -115,9 +234,17 @@ class ConsultationRecord {
     required this.scheduledAt,
     required this.amountPaid,
     required this.followUpRequired,
+    this.patientName,
+    this.patientAge,
+    this.patientSex,
+    this.patientCity,
+    this.patientMedicalHistory = const [],
+    this.patientCurrentMedications = const [],
+    this.doctorName,
     this.prescription,
     this.clinicVisitDate,
     this.clinicVisitSlot,
+    this.videoSession,
   });
 
   final String id;
@@ -129,9 +256,17 @@ class ConsultationRecord {
   final DateTime scheduledAt;
   final int amountPaid;
   final bool followUpRequired;
+  final String? patientName;
+  final int? patientAge;
+  final String? patientSex;
+  final String? patientCity;
+  final List<String> patientMedicalHistory;
+  final List<String> patientCurrentMedications;
+  final String? doctorName;
   final String? prescription;
   final String? clinicVisitDate;
   final String? clinicVisitSlot;
+  final ConsultationVideoSession? videoSession;
 
   ConsultationRecord copyWith({
     String? id,
@@ -143,9 +278,17 @@ class ConsultationRecord {
     DateTime? scheduledAt,
     int? amountPaid,
     bool? followUpRequired,
+    String? patientName,
+    int? patientAge,
+    String? patientSex,
+    String? patientCity,
+    List<String>? patientMedicalHistory,
+    List<String>? patientCurrentMedications,
+    String? doctorName,
     String? prescription,
     String? clinicVisitDate,
     String? clinicVisitSlot,
+    ConsultationVideoSession? videoSession,
   }) {
     return ConsultationRecord(
       id: id ?? this.id,
@@ -157,9 +300,18 @@ class ConsultationRecord {
       scheduledAt: scheduledAt ?? this.scheduledAt,
       amountPaid: amountPaid ?? this.amountPaid,
       followUpRequired: followUpRequired ?? this.followUpRequired,
+      patientName: patientName ?? this.patientName,
+      patientAge: patientAge ?? this.patientAge,
+      patientSex: patientSex ?? this.patientSex,
+      patientCity: patientCity ?? this.patientCity,
+      patientMedicalHistory: patientMedicalHistory ?? this.patientMedicalHistory,
+      patientCurrentMedications:
+          patientCurrentMedications ?? this.patientCurrentMedications,
+      doctorName: doctorName ?? this.doctorName,
       prescription: prescription ?? this.prescription,
       clinicVisitDate: clinicVisitDate ?? this.clinicVisitDate,
       clinicVisitSlot: clinicVisitSlot ?? this.clinicVisitSlot,
+      videoSession: videoSession ?? this.videoSession,
     );
   }
 }
