@@ -15,30 +15,30 @@ class PatientAppRoot extends StatelessWidget {
       title: 'Lokal MedAssist Patient',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0D8C74),
+          seedColor: const Color(0xFF0A6A58),
           brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF7F4EC),
+        scaffoldBackgroundColor: const Color(0xFFEDE6D8),
         useMaterial3: true,
         cardTheme: const CardThemeData(
           elevation: 0,
           margin: EdgeInsets.zero,
-          color: Colors.white,
+          color: Color(0xFFF6F0E5),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Colors.white,
+          fillColor: const Color(0xFFF8F3EA),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(color: Color(0xFFD8D4CB)),
+            borderSide: const BorderSide(color: Color(0xFFC9C0B2)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(color: Color(0xFFD8D4CB)),
+            borderSide: const BorderSide(color: Color(0xFFC9C0B2)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(color: Color(0xFF0D8C74), width: 1.4),
+            borderSide: const BorderSide(color: Color(0xFF0A6A58), width: 1.4),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
@@ -92,6 +92,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
   bool _screenLoading = false;
   bool _bootLoading = true;
   bool _profileSaving = false;
+  bool _languageSaving = false;
   String? _chatError;
   String? _authError;
   String? _token;
@@ -131,6 +132,293 @@ class _PatientHomePageState extends State<PatientHomePage> {
     super.dispose();
   }
 
+  Language get _appLanguage => _state.patient.preferredLanguage;
+
+  String _t(String key) {
+    const translations = <Language, Map<String, String>>{
+      Language.english: {
+        'app_title': 'Lokal MedAssist',
+        'menu_profile': 'User profile',
+        'menu_personal': 'Personal data',
+        'menu_history': 'Past consultations / visits',
+        'menu_logout': 'Logout',
+        'page_chat': 'AI Chat',
+        'page_doctors': 'Doctors',
+        'page_records': 'Records',
+        'hello': 'Hello',
+        'home_subtitle':
+            'Use the menu for profile and history. Start from the quick actions below for chat, doctor help, records, and insurance.',
+        'city': 'City',
+        'language': 'Language',
+        'consults': 'Consults',
+        'quick_actions': 'Quick actions',
+        'profile': 'Profile',
+        'personal_data': 'Personal Data',
+        'insurance': 'Insurance',
+        'active_care': 'Active care',
+        'doctor_assigned': 'Doctor assigned',
+        'join_video': 'Join video call',
+        'open_records': 'Open records',
+        'health_snapshot': 'Health snapshot',
+        'history': 'History',
+        'no_history': 'No history saved',
+        'current_meds': 'Current meds',
+        'none_listed': 'None listed',
+        'blood': 'Blood',
+        'height': 'Height',
+        'weight': 'Weight',
+        'allergies': 'Allergies',
+        'insurance_subtitle': 'Buy simple life insurance plans directly from the patient app.',
+        'insurance_buy': 'Buy insurance',
+        'personal_summary': 'Personal data summary',
+        'reports': 'Reports',
+        'no_reports': 'No reports uploaded',
+        'chronic_conditions': 'Chronic conditions',
+        'emergency_contact': 'Emergency contact',
+        'not_saved': 'Not saved',
+        'update_patient_details': 'Update patient details',
+        'chat_title': 'AI medical assistant',
+        'chat_subtitle':
+            'Describe your symptoms simply. The assistant will guide you and suggest when to involve a doctor.',
+        'generating': 'Generating triage response...',
+        'triage_summary': 'Triage summary',
+        'risk': 'Risk',
+        'mode': 'Mode',
+        'red_flag': 'Red flag',
+        'no_red_flag': 'No red flag',
+        'follow_up_questions': 'Suggested follow-up questions',
+        'recent_conversations': 'Recent conversations',
+        'chat_hint': 'Example: I have fever and cough since yesterday',
+        'sending': 'Sending...',
+        'ask': 'Ask',
+        'doctor_consultations': 'Doctor consultations',
+        'doctor_consultations_subtitle':
+            'If AI guidance is not enough, choose a doctor, pay once, and join a 1:1 video consultation.',
+        'current_consultation': 'Your current consultation',
+        'what_consult': 'What would you like to consult for?',
+        'online': 'Online',
+        'offline': 'Offline',
+        'fee': 'Fee',
+        'queue': 'Queue',
+        'rating': 'Rating',
+        'pay_join_queue': 'Pay and join queue',
+        'records_followup': 'Records and follow-up',
+        'records_subtitle':
+            'Your past consultations, prescriptions, appointments, and feedback stay linked to your profile.',
+        'no_records': 'No records yet',
+        'no_records_subtitle':
+            'Bookings, appointments, prescriptions, and consultation summaries will appear here once created.',
+        'doctor': 'Doctor',
+        'follow_up': 'Follow-up',
+        'prescription': 'Prescription',
+        'pending_doctor_note': 'Pending doctor note',
+        'clinic_visit': 'Clinic visit',
+        'not_booked': 'Not booked',
+        'open_video_room': 'Open video room',
+        'book_follow_up': 'Book follow-up',
+        'appointment': 'Appointment',
+        'advice': 'Advice',
+        'auth_title': 'Patient authentication',
+        'auth_subtitle':
+            'Sign in to use AI guidance, doctor booking, video consultation, records, and patient profile tools.',
+        'email': 'Email',
+        'password': 'Password',
+        'signing_in': 'Signing in...',
+        'sign_in': 'Sign in',
+        'demo_credentials': 'Demo credentials',
+        'signed_in': 'Signed in successfully.',
+        'login_failed': 'Login failed. Check backend, email, and password.',
+      },
+      Language.hindi: {
+        'app_title': 'लोकल मेडअसिस्ट',
+        'menu_profile': 'उपयोगकर्ता प्रोफ़ाइल',
+        'menu_personal': 'व्यक्तिगत डेटा',
+        'menu_history': 'पिछली परामर्श / विज़िट',
+        'menu_logout': 'लॉगआउट',
+        'page_chat': 'एआई चैट',
+        'page_doctors': 'डॉक्टर',
+        'page_records': 'रिकॉर्ड्स',
+        'hello': 'नमस्ते',
+        'home_subtitle':
+            'प्रोफ़ाइल और हिस्ट्री के लिए मेन्यू का उपयोग करें। नीचे दिए गए विकल्पों से चैट, डॉक्टर, रिकॉर्ड्स और इंश्योरेंस चुनें।',
+        'city': 'शहर',
+        'language': 'भाषा',
+        'consults': 'परामर्श',
+        'quick_actions': 'त्वरित विकल्प',
+        'profile': 'प्रोफ़ाइल',
+        'personal_data': 'व्यक्तिगत डेटा',
+        'insurance': 'बीमा',
+        'active_care': 'सक्रिय देखभाल',
+        'doctor_assigned': 'डॉक्टर नियुक्त',
+        'join_video': 'वीडियो कॉल जॉइन करें',
+        'open_records': 'रिकॉर्ड्स खोलें',
+        'health_snapshot': 'स्वास्थ्य सारांश',
+        'history': 'इतिहास',
+        'no_history': 'कोई इतिहास सुरक्षित नहीं',
+        'current_meds': 'वर्तमान दवाइयाँ',
+        'none_listed': 'कुछ सूचीबद्ध नहीं',
+        'blood': 'ब्लड ग्रुप',
+        'height': 'लंबाई',
+        'weight': 'वज़न',
+        'allergies': 'एलर्जी',
+        'insurance_subtitle': 'मरीज ऐप से सीधे सरल जीवन बीमा योजनाएँ खरीदें।',
+        'insurance_buy': 'बीमा खरीदें',
+        'personal_summary': 'व्यक्तिगत डेटा सारांश',
+        'reports': 'रिपोर्ट्स',
+        'no_reports': 'कोई रिपोर्ट अपलोड नहीं',
+        'chronic_conditions': 'दीर्घकालिक स्थितियाँ',
+        'emergency_contact': 'आपातकालीन संपर्क',
+        'not_saved': 'सहेजा नहीं गया',
+        'update_patient_details': 'मरीज विवरण अपडेट करें',
+        'chat_title': 'एआई मेडिकल सहायक',
+        'chat_subtitle':
+            'अपने लक्षण सरल भाषा में लिखें। सहायक मार्गदर्शन करेगा और बताएगा कि डॉक्टर की जरूरत है या नहीं।',
+        'generating': 'ट्रायाज उत्तर तैयार हो रहा है...',
+        'triage_summary': 'ट्रायाज सारांश',
+        'risk': 'जोखिम',
+        'mode': 'मोड',
+        'red_flag': 'रेड फ्लैग',
+        'no_red_flag': 'कोई रेड फ्लैग नहीं',
+        'follow_up_questions': 'सुझाए गए फॉलो-अप प्रश्न',
+        'recent_conversations': 'हाल की बातचीत',
+        'chat_hint': 'उदाहरण: मुझे कल से बुखार और खांसी है',
+        'sending': 'भेजा जा रहा है...',
+        'ask': 'पूछें',
+        'doctor_consultations': 'डॉक्टर परामर्श',
+        'doctor_consultations_subtitle':
+            'यदि एआई मार्गदर्शन पर्याप्त नहीं है, तो डॉक्टर चुनें, भुगतान करें और 1:1 वीडियो परामर्श से जुड़ें।',
+        'current_consultation': 'आपका वर्तमान परामर्श',
+        'what_consult': 'आप किस बारे में परामर्श चाहते हैं?',
+        'online': 'ऑनलाइन',
+        'offline': 'ऑफलाइन',
+        'fee': 'फ़ीस',
+        'queue': 'क्यू',
+        'rating': 'रेटिंग',
+        'pay_join_queue': 'भुगतान कर क्यू में जुड़ें',
+        'records_followup': 'रिकॉर्ड्स और फॉलो-अप',
+        'records_subtitle':
+            'आपके पिछले परामर्श, प्रिस्क्रिप्शन, अपॉइंटमेंट और फीडबैक आपकी प्रोफ़ाइल से जुड़े रहते हैं।',
+        'no_records': 'अभी कोई रिकॉर्ड नहीं',
+        'no_records_subtitle':
+            'बुकिंग, अपॉइंटमेंट, प्रिस्क्रिप्शन और परामर्श सारांश यहाँ दिखाई देंगे।',
+        'doctor': 'डॉक्टर',
+        'follow_up': 'फॉलो-अप',
+        'prescription': 'प्रिस्क्रिप्शन',
+        'pending_doctor_note': 'डॉक्टर की टिप्पणी लंबित है',
+        'clinic_visit': 'क्लिनिक विज़िट',
+        'not_booked': 'बुक नहीं किया गया',
+        'open_video_room': 'वीडियो रूम खोलें',
+        'book_follow_up': 'फॉलो-अप बुक करें',
+        'appointment': 'अपॉइंटमेंट',
+        'advice': 'सलाह',
+        'auth_title': 'मरीज प्रमाणीकरण',
+        'auth_subtitle':
+            'एआई मार्गदर्शन, डॉक्टर बुकिंग, वीडियो परामर्श, रिकॉर्ड्स और प्रोफ़ाइल टूल्स के लिए साइन इन करें।',
+        'email': 'ईमेल',
+        'password': 'पासवर्ड',
+        'signing_in': 'साइन इन हो रहा है...',
+        'sign_in': 'साइन इन',
+        'demo_credentials': 'डेमो क्रेडेंशियल्स',
+        'signed_in': 'सफलतापूर्वक साइन इन हो गया।',
+        'login_failed': 'लॉगिन विफल। बैकएंड, ईमेल और पासवर्ड जांचें।',
+      },
+      Language.marathi: {
+        'app_title': 'लोकल मेडअसिस्ट',
+        'menu_profile': 'वापरकर्ता प्रोफाइल',
+        'menu_personal': 'वैयक्तिक माहिती',
+        'menu_history': 'मागील सल्लामसलत / भेटी',
+        'menu_logout': 'लॉगआउट',
+        'page_chat': 'एआय चॅट',
+        'page_doctors': 'डॉक्टर्स',
+        'page_records': 'रेकॉर्ड्स',
+        'hello': 'नमस्कार',
+        'home_subtitle':
+            'प्रोफाइल आणि इतिहासासाठी मेनू वापरा. खालील पर्यायांतून चॅट, डॉक्टर, रेकॉर्ड्स आणि इन्शुरन्स निवडा.',
+        'city': 'शहर',
+        'language': 'भाषा',
+        'consults': 'सल्लामसलत',
+        'quick_actions': 'त्वरित पर्याय',
+        'profile': 'प्रोफाइल',
+        'personal_data': 'वैयक्तिक माहिती',
+        'insurance': 'विमा',
+        'active_care': 'सक्रिय काळजी',
+        'doctor_assigned': 'डॉक्टर नियुक्त',
+        'join_video': 'व्हिडिओ कॉलमध्ये सामील व्हा',
+        'open_records': 'रेकॉर्ड्स उघडा',
+        'health_snapshot': 'आरोग्य सारांश',
+        'history': 'इतिहास',
+        'no_history': 'इतिहास जतन केलेला नाही',
+        'current_meds': 'सध्याची औषधे',
+        'none_listed': 'काही नोंदलेले नाही',
+        'blood': 'ब्लड ग्रुप',
+        'height': 'उंची',
+        'weight': 'वजन',
+        'allergies': 'अ‍ॅलर्जी',
+        'insurance_subtitle': 'रुग्ण अॅपमधून सोपे जीवन विमा प्लॅन खरेदी करा.',
+        'insurance_buy': 'विमा खरेदी करा',
+        'personal_summary': 'वैयक्तिक माहिती सारांश',
+        'reports': 'रिपोर्ट्स',
+        'no_reports': 'कोणतेही रिपोर्ट्स अपलोड नाहीत',
+        'chronic_conditions': 'दीर्घकालीन स्थिती',
+        'emergency_contact': 'आपत्कालीन संपर्क',
+        'not_saved': 'जतन केलेले नाही',
+        'update_patient_details': 'रुग्ण तपशील अपडेट करा',
+        'chat_title': 'एआय वैद्यकीय सहाय्यक',
+        'chat_subtitle':
+            'आपली लक्षणे सोप्या भाषेत लिहा. सहाय्यक मार्गदर्शन करेल आणि डॉक्टरची गरज असल्यास सुचवेल.',
+        'generating': 'ट्रायाज प्रतिसाद तयार होत आहे...',
+        'triage_summary': 'ट्रायाज सारांश',
+        'risk': 'जोखीम',
+        'mode': 'मोड',
+        'red_flag': 'रेड फ्लॅग',
+        'no_red_flag': 'रेड फ्लॅग नाही',
+        'follow_up_questions': 'सुचवलेले फॉलो-अप प्रश्न',
+        'recent_conversations': 'अलीकडील संभाषणे',
+        'chat_hint': 'उदाहरण: मला कालपासून ताप आणि खोकला आहे',
+        'sending': 'पाठवत आहे...',
+        'ask': 'विचारा',
+        'doctor_consultations': 'डॉक्टर सल्लामसलत',
+        'doctor_consultations_subtitle':
+            'एआय मार्गदर्शन पुरेसे नसल्यास डॉक्टर निवडा, पैसे भरा आणि 1:1 व्हिडिओ सल्लामसलतीत सामील व्हा.',
+        'current_consultation': 'तुमची चालू सल्लामसलत',
+        'what_consult': 'तुम्हाला कोणत्या बाबतीत सल्ला हवा आहे?',
+        'online': 'ऑनलाइन',
+        'offline': 'ऑफलाइन',
+        'fee': 'फी',
+        'queue': 'रांग',
+        'rating': 'रेटिंग',
+        'pay_join_queue': 'पैसे भरून रांगेत सामील व्हा',
+        'records_followup': 'रेकॉर्ड्स आणि फॉलो-अप',
+        'records_subtitle':
+            'तुमच्या मागील सल्लामसलती, प्रिस्क्रिप्शन, अपॉइंटमेंट्स आणि फीडबॅक तुमच्या प्रोफाइलशी जोडलेले राहतात.',
+        'no_records': 'अजून रेकॉर्ड्स नाहीत',
+        'no_records_subtitle':
+            'बुकिंग, अपॉइंटमेंट, प्रिस्क्रिप्शन आणि सल्लामसलत सारांश येथे दिसतील.',
+        'doctor': 'डॉक्टर',
+        'follow_up': 'फॉलो-अप',
+        'prescription': 'प्रिस्क्रिप्शन',
+        'pending_doctor_note': 'डॉक्टरची नोंद प्रलंबित आहे',
+        'clinic_visit': 'क्लिनिक भेट',
+        'not_booked': 'बुक केलेले नाही',
+        'open_video_room': 'व्हिडिओ रूम उघडा',
+        'book_follow_up': 'फॉलो-अप बुक करा',
+        'appointment': 'अपॉइंटमेंट',
+        'advice': 'सल्ला',
+        'auth_title': 'रुग्ण प्रमाणीकरण',
+        'auth_subtitle':
+            'एआय मार्गदर्शन, डॉक्टर बुकिंग, व्हिडिओ सल्लामसलत, रेकॉर्ड्स आणि प्रोफाइल साधनांसाठी साइन इन करा.',
+        'email': 'ईमेल',
+        'password': 'पासवर्ड',
+        'signing_in': 'साइन इन होत आहे...',
+        'sign_in': 'साइन इन',
+        'demo_credentials': 'डेमो क्रेडेन्शियल्स',
+        'signed_in': 'यशस्वीरीत्या साइन इन झाले.',
+        'login_failed': 'लॉगिन अयशस्वी. बॅकएंड, ईमेल आणि पासवर्ड तपासा.',
+      },
+    };
+    return translations[_appLanguage]?[key] ?? translations[Language.english]![key] ?? key;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_bootLoading) {
@@ -154,20 +442,40 @@ class _PatientHomePageState extends State<PatientHomePage> {
       _buildDoctors(),
       _buildRecords(),
     ];
+    final pageTitles = [
+      _t('app_title'),
+      _t('page_chat'),
+      _t('page_doctors'),
+      _t('page_records'),
+    ];
 
     return Scaffold(
+      drawer: _buildAppDrawer(),
       appBar: AppBar(
-        title: const Text('Patient App'),
+        automaticallyImplyLeading: false,
+        leading: _currentIndex == 0
+            ? Builder(
+                builder: (context) => IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
+              )
+            : IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => setState(() => _currentIndex = 0),
+              ),
+        title: Text(pageTitles[_currentIndex]),
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         actions: [
+          _LanguageSelector(
+            currentLanguage: _state.patient.preferredLanguage,
+            disabled: _languageSaving,
+            onSelected: _changePreferredLanguage,
+          ),
           IconButton(
             onPressed: _screenLoading ? null : _refreshBackendData,
             icon: const Icon(Icons.refresh),
-          ),
-          IconButton(
-            onPressed: _logout,
-            icon: const Icon(Icons.logout),
           ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
@@ -186,7 +494,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFF9F5ED), Color(0xFFF2E9D7)],
+              colors: [Color(0xFFF2EADF), Color(0xFFE1D3BF)],
             ),
           ),
           child: AnimatedSwitcher(
@@ -194,16 +502,6 @@ class _PatientHomePageState extends State<PatientHomePage> {
             child: pages[_currentIndex],
           ),
         ),
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (value) => setState(() => _currentIndex = value),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.chat_bubble_outline), label: 'AI Chat'),
-          NavigationDestination(icon: Icon(Icons.video_call_outlined), label: 'Doctors'),
-          NavigationDestination(icon: Icon(Icons.folder_open_outlined), label: 'Records'),
-        ],
       ),
     );
   }
@@ -218,9 +516,8 @@ class _PatientHomePageState extends State<PatientHomePage> {
       padding: const EdgeInsets.all(16),
       children: [
         _HeroCard(
-          title: 'Medical help in your language',
-          subtitle:
-              'Start with AI guidance, escalate to a doctor, join a video call, and keep your care history in one place.',
+          title: '${_t('hello')}, ${patient.name.split(' ').first}',
+          subtitle: _t('home_subtitle'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -228,38 +525,54 @@ class _PatientHomePageState extends State<PatientHomePage> {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  _MetricChip(label: 'City', value: patient.city),
-                  _MetricChip(label: 'Language', value: languageLabel(patient.preferredLanguage)),
-                  _MetricChip(label: 'Consults', value: '${patient.previousConsultations}'),
+                  _MetricChip(label: _t('city'), value: patient.city),
+                  _MetricChip(label: _t('language'), value: languageLabel(patient.preferredLanguage)),
+                  _MetricChip(label: _t('consults'), value: '${patient.previousConsultations}'),
                   _MetricChip(label: 'BMI', value: '${patient.bmi}'),
                 ],
               ),
-              const SizedBox(height: 18),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  _QuickActionButton(
-                    icon: Icons.chat_bubble_outline,
-                    label: 'Ask AI',
-                    onTap: () => setState(() => _currentIndex = 1),
-                  ),
-                  _QuickActionButton(
-                    icon: Icons.video_call_outlined,
-                    label: 'Find doctor',
-                    onTap: () => setState(() => _currentIndex = 2),
-                  ),
-                  _QuickActionButton(
-                    icon: Icons.description_outlined,
-                    label: 'Records',
-                    onTap: () => setState(() => _currentIndex = 3),
-                  ),
-                  _QuickActionButton(
-                    icon: Icons.person_outline,
-                    label: 'Edit profile',
-                    onTap: _showProfileEditor,
-                  ),
-                ],
+            ],
+          ),
+        ),
+        _SectionCard(
+          title: _t('quick_actions'),
+          child: GridView.count(
+            crossAxisCount: 3,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 0.92,
+            children: [
+              _HomeActionTile(
+                icon: Icons.chat_bubble_outline,
+                label: _t('page_chat'),
+                onTap: () => setState(() => _currentIndex = 1),
+              ),
+              _HomeActionTile(
+                icon: Icons.local_hospital_outlined,
+                label: _t('page_doctors'),
+                onTap: () => setState(() => _currentIndex = 2),
+              ),
+              _HomeActionTile(
+                icon: Icons.folder_open_outlined,
+                label: _t('page_records'),
+                onTap: () => setState(() => _currentIndex = 3),
+              ),
+              _HomeActionTile(
+                icon: Icons.person_outline,
+                label: _t('profile'),
+                onTap: _showUserProfileSheet,
+              ),
+              _HomeActionTile(
+                icon: Icons.badge_outlined,
+                label: _t('personal_data'),
+                onTap: _showProfileEditor,
+              ),
+              _HomeActionTile(
+                icon: Icons.shield_outlined,
+                label: _t('insurance'),
+                onTap: _showInsuranceSheet,
               ),
             ],
           ),
@@ -271,7 +584,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
           ),
         if (activeConsultation != null)
           _SectionCard(
-            title: 'Active care',
+            title: _t('active_care'),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -285,7 +598,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
                   runSpacing: 8,
                   children: [
                     _StatusPill(label: activeConsultation.status.name, highlighted: true),
-                    _StatusPill(label: activeConsultation.doctorName ?? 'Doctor assigned'),
+                    _StatusPill(label: activeConsultation.doctorName ?? _t('doctor_assigned')),
                     if (activeConsultation.videoSession != null)
                       _StatusPill(
                         label: 'Video ${activeConsultation.videoSession!.status.toLowerCase()}',
@@ -295,8 +608,16 @@ class _PatientHomePageState extends State<PatientHomePage> {
                 const SizedBox(height: 12),
                 Text(
                   activeConsultation.videoSession != null
-                      ? 'Your consultation room is ready. You can join directly from the app.'
-                      : 'Your consultation is booked. The room will be prepared when the doctor is ready.',
+                      ? (_appLanguage == Language.english
+                          ? 'Your consultation room is ready. You can join directly from the app.'
+                          : _appLanguage == Language.hindi
+                              ? 'आपका परामर्श कक्ष तैयार है। आप ऐप से सीधे जुड़ सकते हैं।'
+                              : 'तुमची सल्लामसलत रूम तयार आहे. तुम्ही अॅपमधून थेट जॉइन करू शकता.')
+                      : (_appLanguage == Language.english
+                          ? 'Your consultation is booked. The room will be prepared when the doctor is ready.'
+                          : _appLanguage == Language.hindi
+                              ? 'आपका परामर्श बुक हो गया है। डॉक्टर तैयार होने पर रूम तैयार किया जाएगा।'
+                              : 'तुमची सल्लामसलत बुक झाली आहे. डॉक्टर तयार झाल्यावर रूम तयार होईल.'),
                 ),
                 const SizedBox(height: 14),
                 Wrap(
@@ -306,11 +627,11 @@ class _PatientHomePageState extends State<PatientHomePage> {
                     FilledButton.icon(
                       onPressed: () => _joinConsultation(activeConsultation),
                       icon: const Icon(Icons.videocam_outlined),
-                      label: const Text('Join video call'),
+                      label: Text(_t('join_video')),
                     ),
                     FilledButton.tonal(
                       onPressed: () => setState(() => _currentIndex = 3),
-                      child: const Text('Open records'),
+                      child: Text(_t('open_records')),
                     ),
                   ],
                 ),
@@ -318,18 +639,18 @@ class _PatientHomePageState extends State<PatientHomePage> {
             ),
           ),
         _SectionCard(
-          title: 'Health snapshot',
+          title: _t('health_snapshot'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('${patient.name}, ${patient.age} years, ${patient.sex}'),
               const SizedBox(height: 8),
               Text(
-                'History: ${patient.medicalHistory.isEmpty ? 'No history saved' : patient.medicalHistory.join(', ')}',
+                '${_t('history')}: ${patient.medicalHistory.isEmpty ? _t('no_history') : patient.medicalHistory.join(', ')}',
               ),
               const SizedBox(height: 8),
               Text(
-                'Current meds: ${metadata.currentMedications.isEmpty ? 'None listed' : metadata.currentMedications.join(', ')}',
+                '${_t('current_meds')}: ${metadata.currentMedications.isEmpty ? _t('none_listed') : metadata.currentMedications.join(', ')}',
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -337,45 +658,68 @@ class _PatientHomePageState extends State<PatientHomePage> {
                 runSpacing: 8,
                 children: [
                   if (metadata.bloodGroup != null)
-                    _StatusPill(label: 'Blood ${metadata.bloodGroup}'),
+                    _StatusPill(label: '${_t('blood')} ${metadata.bloodGroup}'),
                   if (metadata.heightCm != null)
                     _StatusPill(
-                      label: 'Height ${metadata.heightCm!.toStringAsFixed(0)} cm',
+                      label: '${_t('height')} ${metadata.heightCm!.toStringAsFixed(0)} cm',
                     ),
                   if (metadata.weightKg != null)
                     _StatusPill(
-                      label: 'Weight ${metadata.weightKg!.toStringAsFixed(0)} kg',
+                      label: '${_t('weight')} ${metadata.weightKg!.toStringAsFixed(0)} kg',
                     ),
                   if (metadata.allergies.isNotEmpty)
-                    _StatusPill(label: 'Allergies ${metadata.allergies.length}'),
+                    _StatusPill(label: '${_t('allergies')} ${metadata.allergies.length}'),
                 ],
               ),
             ],
           ),
         ),
         _SectionCard(
-          title: 'Care essentials',
+          title: _t('insurance'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_t('insurance_subtitle')),
+              const SizedBox(height: 14),
+              _InsuranceTile(
+                title: 'Life Secure Basic',
+                subtitle: 'Affordable life cover for individuals',
+                price: 'Starting Rs 299/month',
+                onTap: () => _buyInsurance('Life Secure Basic'),
+              ),
+              const SizedBox(height: 10),
+              _InsuranceTile(
+                title: 'Family Shield Plus',
+                subtitle: 'Life cover for spouse and dependents',
+                price: 'Starting Rs 699/month',
+                onTap: () => _buyInsurance('Family Shield Plus'),
+              ),
+            ],
+          ),
+        ),
+        _SectionCard(
+          title: _t('personal_summary'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _InfoRow(
-                label: 'Reports',
-                value: patient.reports.isEmpty ? 'No reports uploaded' : patient.reports.join(', '),
+                label: _t('reports'),
+                value: patient.reports.isEmpty ? _t('no_reports') : patient.reports.join(', '),
               ),
               _InfoRow(
-                label: 'Allergies',
-                value: metadata.allergies.isEmpty ? 'None listed' : metadata.allergies.join(', '),
+                label: _t('allergies'),
+                value: metadata.allergies.isEmpty ? _t('none_listed') : metadata.allergies.join(', '),
               ),
               _InfoRow(
-                label: 'Chronic conditions',
+                label: _t('chronic_conditions'),
                 value: metadata.chronicConditions.isEmpty
-                    ? 'None listed'
+                    ? _t('none_listed')
                     : metadata.chronicConditions.join(', '),
               ),
               _InfoRow(
-                label: 'Emergency contact',
+                label: _t('emergency_contact'),
                 value: metadata.emergencyContactName == null
-                    ? 'Not saved'
+                    ? _t('not_saved')
                     : '${metadata.emergencyContactName} • ${metadata.emergencyContactPhone ?? ''}',
               ),
               const SizedBox(height: 14),
@@ -384,13 +728,89 @@ class _PatientHomePageState extends State<PatientHomePage> {
                 child: FilledButton.tonalIcon(
                   onPressed: _showProfileEditor,
                   icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Update patient details'),
+                  label: Text(_t('update_patient_details')),
                 ),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Drawer _buildAppDrawer() {
+    final patient = _state.patient;
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+              decoration: const BoxDecoration(color: Color(0xFFD7E7DF)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const CircleAvatar(
+                    radius: 28,
+                    backgroundColor: Color(0xFF0D8C74),
+                    child: Icon(Icons.person, color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    patient.name,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    patient.patientId,
+                    style: const TextStyle(color: Color(0xFF5D574E)),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  _DrawerTile(
+                    icon: Icons.person_outline,
+                    label: _t('menu_profile'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _showUserProfileSheet();
+                    },
+                  ),
+                  _DrawerTile(
+                    icon: Icons.badge_outlined,
+                    label: _t('menu_personal'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _showProfileEditor();
+                    },
+                  ),
+                  _DrawerTile(
+                    icon: Icons.history_outlined,
+                    label: _t('menu_history'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      setState(() => _currentIndex = 3);
+                    },
+                  ),
+                  _DrawerTile(
+                    icon: Icons.logout,
+                    label: _t('menu_logout'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _logout();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -404,10 +824,9 @@ class _PatientHomePageState extends State<PatientHomePage> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                const _SectionHeader(
-                  title: 'AI medical assistant',
-                  subtitle:
-                      'Describe your symptoms simply. The assistant will guide you and suggest when to involve a doctor.',
+                _SectionHeader(
+                  title: _t('chat_title'),
+                  subtitle: _t('chat_subtitle'),
                 ),
                 ..._state.chat.map((message) {
                   final isAssistant = message.sender == 'assistant';
@@ -417,11 +836,11 @@ class _PatientHomePageState extends State<PatientHomePage> {
                   );
                 }),
                 if (_chatLoading)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(bottom: 12),
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: Chip(label: Text('Generating triage response...')),
+                      child: Chip(label: Text(_t('generating'))),
                     ),
                   ),
                 if (_chatError != null)
@@ -431,7 +850,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
                   ),
                 if (_latestReply != null)
                   _SectionCard(
-                    title: 'Triage summary',
+                    title: _t('triage_summary'),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -439,11 +858,11 @@ class _PatientHomePageState extends State<PatientHomePage> {
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            _StatusPill(label: 'Risk ${_latestReply!.riskLevel}'),
-                            _StatusPill(label: 'Mode ${_latestReply!.careMode}'),
+                            _StatusPill(label: '${_t('risk')} ${_latestReply!.riskLevel}'),
+                            _StatusPill(label: '${_t('mode')} ${_latestReply!.careMode}'),
                             _StatusPill(
                               label:
-                                  _latestReply!.redFlagDetected ? 'Red flag' : 'No red flag',
+                                  _latestReply!.redFlagDetected ? _t('red_flag') : _t('no_red_flag'),
                               highlighted: _latestReply!.redFlagDetected,
                             ),
                           ],
@@ -452,9 +871,9 @@ class _PatientHomePageState extends State<PatientHomePage> {
                         Text(_latestReply!.doctorSummary),
                         if (_latestReply!.followUpQuestions.isNotEmpty) ...[
                           const SizedBox(height: 12),
-                          const Text(
-                            'Suggested follow-up questions',
-                            style: TextStyle(fontWeight: FontWeight.w700),
+                          Text(
+                            _t('follow_up_questions'),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 6),
                           ..._latestReply!.followUpQuestions.map((item) => Text('• $item')),
@@ -464,7 +883,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
                   ),
                 if (_chatThreads.isNotEmpty)
                   _SectionCard(
-                    title: 'Recent conversations',
+                    title: _t('recent_conversations'),
                     child: Column(
                       children: _chatThreads.take(4).map((thread) {
                         final selected = _conversationId == thread.conversationId;
@@ -472,8 +891,8 @@ class _PatientHomePageState extends State<PatientHomePage> {
                           margin: const EdgeInsets.only(bottom: 10),
                           decoration: BoxDecoration(
                             color: selected
-                                ? const Color(0xFFE7F6F1)
-                                : const Color(0xFFF7F5F0),
+                                ? const Color(0xFFD7E9E1)
+                                : const Color(0xFFEEE6D9),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: ListTile(
@@ -504,15 +923,15 @@ class _PatientHomePageState extends State<PatientHomePage> {
               Expanded(
                 child: TextField(
                   controller: _chatController,
-                  decoration: const InputDecoration(
-                    hintText: 'Example: I have fever and cough since yesterday',
+                  decoration: InputDecoration(
+                    hintText: _t('chat_hint'),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
               FilledButton(
                 onPressed: _chatLoading ? null : _sendChat,
-                child: Text(_chatLoading ? 'Sending...' : 'Ask'),
+                child: Text(_chatLoading ? _t('sending') : _t('ask')),
               ),
             ],
           ),
@@ -528,14 +947,13 @@ class _PatientHomePageState extends State<PatientHomePage> {
       key: const ValueKey('doctors'),
       padding: const EdgeInsets.all(16),
       children: [
-        const _SectionHeader(
-          title: 'Doctor consultations',
-          subtitle:
-              'If AI guidance is not enough, choose a doctor, pay once, and join a 1:1 video consultation.',
+        _SectionHeader(
+          title: _t('doctor_consultations'),
+          subtitle: _t('doctor_consultations_subtitle'),
         ),
         if (activeVideoConsultation != null)
           _SectionCard(
-            title: 'Your current consultation',
+            title: _t('current_consultation'),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -550,7 +968,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
                     _StatusPill(label: activeVideoConsultation.status.name, highlighted: true),
                     if (activeVideoConsultation.videoSession != null)
                       _StatusPill(
-                        label: 'Video ${activeVideoConsultation.videoSession!.status.toLowerCase()}',
+                    label: 'Video ${activeVideoConsultation.videoSession!.status.toLowerCase()}',
                       ),
                   ],
                 ),
@@ -560,7 +978,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
                   child: FilledButton.icon(
                     onPressed: () => _joinConsultation(activeVideoConsultation),
                     icon: const Icon(Icons.videocam_outlined),
-                    label: const Text('Join current video consultation'),
+                    label: Text(_t('join_video')),
                   ),
                 ),
               ],
@@ -569,8 +987,8 @@ class _PatientHomePageState extends State<PatientHomePage> {
         TextField(
           controller: _bookingConcernController,
           maxLines: 2,
-          decoration: const InputDecoration(
-            hintText: 'What would you like to consult for?',
+          decoration: InputDecoration(
+            hintText: _t('what_consult'),
           ),
         ),
         const SizedBox(height: 14),
@@ -590,7 +1008,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE7F4FF),
+                          color: const Color(0xFFD9E5EE),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Icon(Icons.local_hospital_outlined),
@@ -609,13 +1027,13 @@ class _PatientHomePageState extends State<PatientHomePage> {
                             const SizedBox(height: 6),
                             Text(
                               doctor.languages.map(languageLabel).join(' / '),
-                              style: const TextStyle(color: Color(0xFF6C675D)),
+                              style: const TextStyle(color: Color(0xFF564F47)),
                             ),
                           ],
                         ),
                       ),
                       _StatusPill(
-                        label: doctor.online ? 'Online' : 'Offline',
+                        label: doctor.online ? _t('online') : _t('offline'),
                         highlighted: doctor.online,
                       ),
                     ],
@@ -625,21 +1043,21 @@ class _PatientHomePageState extends State<PatientHomePage> {
                     children: [
                       Expanded(
                         child: _MiniInfoCard(
-                          label: 'Fee',
+                          label: _t('fee'),
                           value: 'Rs ${doctor.fee}',
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: _MiniInfoCard(
-                          label: 'Queue',
+                          label: _t('queue'),
                           value: '${doctor.queueCount}',
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: _MiniInfoCard(
-                          label: 'Rating',
+                          label: _t('rating'),
                           value: '${doctor.rating}',
                         ),
                       ),
@@ -650,7 +1068,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
                     width: double.infinity,
                     child: FilledButton(
                       onPressed: doctor.online && _token != null ? () => _bookDoctor(doctor) : null,
-                      child: const Text('Pay and join queue'),
+                      child: Text(_t('pay_join_queue')),
                     ),
                   ),
                 ],
@@ -667,16 +1085,15 @@ class _PatientHomePageState extends State<PatientHomePage> {
       key: const ValueKey('records'),
       padding: const EdgeInsets.all(16),
       children: [
-        const _SectionHeader(
-          title: 'Records and follow-up',
-          subtitle:
-              'Your past consultations, prescriptions, appointments, and feedback stay linked to your profile.',
+        _SectionHeader(
+          title: _t('records_followup'),
+          subtitle: _t('records_subtitle'),
         ),
         if (_state.consultations.isEmpty)
-          const _SectionCard(
-            title: 'No records yet',
+          _SectionCard(
+            title: _t('no_records'),
             child: Text(
-              'Bookings, appointments, prescriptions, and consultation summaries will appear here once created.',
+              _t('no_records_subtitle'),
             ),
           )
         else
@@ -686,7 +1103,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Doctor: ${consultation.doctorName ?? consultation.doctorId}'),
+                  Text('${_t('doctor')}: ${consultation.doctorName ?? consultation.doctorId}'),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -695,16 +1112,16 @@ class _PatientHomePageState extends State<PatientHomePage> {
                       _StatusPill(label: consultation.status.name),
                       _StatusPill(label: consultation.recommendedMode),
                       if (consultation.followUpRequired)
-                        const _StatusPill(label: 'Follow-up'),
+                        _StatusPill(label: _t('follow_up')),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Prescription: ${consultation.prescription ?? 'Pending doctor note'}',
+                    '${_t('prescription')}: ${consultation.prescription ?? _t('pending_doctor_note')}',
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Clinic visit: ${consultation.clinicVisitDate ?? 'Not booked'} ${consultation.clinicVisitSlot ?? ''}',
+                    '${_t('clinic_visit')}: ${consultation.clinicVisitDate ?? _t('not_booked')} ${consultation.clinicVisitSlot ?? ''}',
                   ),
                   const SizedBox(height: 12),
                   Wrap(
@@ -715,11 +1132,11 @@ class _PatientHomePageState extends State<PatientHomePage> {
                         onPressed: consultation.recommendedMode == 'VIDEO_CALL'
                             ? () => _joinConsultation(consultation)
                             : null,
-                        child: const Text('Open video room'),
+                        child: Text(_t('open_video_room')),
                       ),
                       FilledButton.tonal(
                         onPressed: () => _scheduleFollowUp(consultation),
-                        child: const Text('Book follow-up'),
+                        child: Text(_t('book_follow_up')),
                       ),
                     ],
                   ),
@@ -738,7 +1155,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Advice: ${prescription.advice}',
+                                  '${_t('advice')}: ${prescription.advice}',
                                   style: const TextStyle(fontWeight: FontWeight.w600),
                                 ),
                                 const SizedBox(height: 4),
@@ -760,7 +1177,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
                         .where((item) => item.consultationId == consultation.id)
                         .map(
                           (appointment) => Text(
-                            'Appointment: ${appointment.date} • ${appointment.slot} • ${appointment.clinicName}',
+                            '${_t('appointment')}: ${appointment.date} • ${appointment.slot} • ${appointment.clinicName}',
                           ),
                         ),
                   ],
@@ -784,21 +1201,20 @@ class _PatientHomePageState extends State<PatientHomePage> {
       padding: const EdgeInsets.all(16),
       children: [
         _HeroCard(
-          title: 'Patient authentication',
-          subtitle:
-              'Sign in to use AI guidance, doctor booking, video consultation, records, and patient profile tools.',
+          title: _t('auth_title'),
+          subtitle: _t('auth_subtitle'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: InputDecoration(labelText: _t('email')),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Password'),
+                decoration: InputDecoration(labelText: _t('password')),
               ),
               const SizedBox(height: 12),
               if (_authError != null) Text(_authError!, style: const TextStyle(color: Colors.red)),
@@ -807,11 +1223,11 @@ class _PatientHomePageState extends State<PatientHomePage> {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: _authLoading ? null : _login,
-                  child: Text(_authLoading ? 'Signing in...' : 'Sign in'),
+                  child: Text(_authLoading ? _t('signing_in') : _t('sign_in')),
                 ),
               ),
               const SizedBox(height: 8),
-              const Text('Demo credentials: suman.verma@lokal.demo / Pass@123'),
+              Text('${_t('demo_credentials')}: suman.verma@lokal.demo / Pass@123'),
             ],
           ),
         ),
@@ -841,13 +1257,13 @@ class _PatientHomePageState extends State<PatientHomePage> {
       await _persistToken(session.token);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Signed in successfully.')),
+        SnackBar(content: Text(_t('signed_in'))),
       );
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _authLoading = false;
-        _authError = 'Login failed. Check backend, email, and password.';
+        _authError = _t('login_failed');
       });
     }
   }
@@ -1145,7 +1561,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
           child: Container(
             height: MediaQuery.of(context).size.height * 0.88,
             decoration: const BoxDecoration(
-              color: Color(0xFFF9F5ED),
+              color: Color(0xFFF0E7DA),
               borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             ),
             child: Column(
@@ -1155,7 +1571,7 @@ class _PatientHomePageState extends State<PatientHomePage> {
                   width: 52,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD0CABB),
+                    color: const Color(0xFFBAAF9E),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -1321,6 +1737,126 @@ class _PatientHomePageState extends State<PatientHomePage> {
     );
   }
 
+  Future<void> _showUserProfileSheet() async {
+    final patient = _state.patient;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFFF0E7DA),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 52,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFBAAF9E),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    _t('menu_profile'),
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 16),
+                  _InfoRow(label: 'Name', value: patient.name),
+                  _InfoRow(label: 'Patient ID', value: patient.patientId),
+                  _InfoRow(label: 'City', value: patient.city),
+                  _InfoRow(
+                    label: 'Preferred language',
+                    value: languageLabel(patient.preferredLanguage),
+                  ),
+                  _InfoRow(
+                    label: 'Completed consultations',
+                    value: '${patient.previousConsultations}',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showInsuranceSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFFF0E7DA),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 52,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFBAAF9E),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    _t('insurance'),
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(_t('insurance_subtitle')),
+                  const SizedBox(height: 16),
+                  _InsuranceTile(
+                    title: 'Life Secure Basic',
+                    subtitle: 'Essential life cover for individuals',
+                    price: 'Rs 299/month',
+                    onTap: () => _buyInsurance('Life Secure Basic'),
+                  ),
+                  const SizedBox(height: 10),
+                  _InsuranceTile(
+                    title: 'Family Shield Plus',
+                    subtitle: 'Life cover for family dependents',
+                    price: 'Rs 699/month',
+                    onTap: () => _buyInsurance('Family Shield Plus'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _buyInsurance(String planName) {
+    Navigator.of(context, rootNavigator: true).maybePop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$planName selected. Insurance checkout can be connected next.')),
+    );
+  }
+
   Future<void> _saveProfile() async {
     final token = _token;
     if (token == null) return;
@@ -1378,6 +1914,67 @@ class _PatientHomePageState extends State<PatientHomePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not save patient metadata.')),
       );
+    }
+  }
+
+  Future<void> _changePreferredLanguage(Language language) async {
+    if (_token == null || _languageSaving || language == _state.patient.preferredLanguage) {
+      return;
+    }
+
+    final previousLanguage = _state.patient.preferredLanguage;
+    final updatedPatient = _state.patient.copyWith(preferredLanguage: language);
+
+    setState(() {
+      _languageSaving = true;
+      _state = _state.copyWith(patient: updatedPatient);
+    });
+
+    try {
+      final savedPatient = await _backendClient.updateProfile(
+        token: _token!,
+        patient: updatedPatient,
+      );
+      if (!mounted) return;
+      setState(() {
+        _languageSaving = false;
+        _state = _state.copyWith(patient: savedPatient);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Language updated to ${_displayLanguage(savedPatient.preferredLanguage)}.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _languageSaving = false;
+        _state = _state.copyWith(
+          patient: _state.patient.copyWith(
+            preferredLanguage: previousLanguage,
+          ),
+        );
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not update language right now. Please sign out and sign in again once if you recently switched backend or app build.',
+          ),
+        ),
+      );
+    }
+  }
+
+  String _displayLanguage(Language language) {
+    switch (language) {
+      case Language.english:
+        return 'English';
+      case Language.hindi:
+        return 'हिंदी';
+      case Language.marathi:
+        return 'मराठी';
     }
   }
 
@@ -1497,7 +2094,7 @@ class _MetricChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8F7F2),
+        color: const Color(0xFFD4E8E0),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -1547,7 +2144,7 @@ class _StatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: highlighted ? const Color(0xFFDDF5EC) : const Color(0xFFF0ECE3),
+        color: highlighted ? const Color(0xFFCFE8DE) : const Color(0xFFE5DDD0),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
@@ -1580,7 +2177,7 @@ class _ChatBubble extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         constraints: const BoxConstraints(maxWidth: 320),
         decoration: BoxDecoration(
-          color: isAssistant ? Colors.white : const Color(0xFFD9F3EC),
+          color: isAssistant ? Colors.white : const Color(0xFFCFE7DF),
           borderRadius: BorderRadius.circular(20),
           boxShadow: const [
             BoxShadow(
@@ -1596,8 +2193,8 @@ class _ChatBubble extends StatelessWidget {
   }
 }
 
-class _QuickActionButton extends StatelessWidget {
-  const _QuickActionButton({
+class _HomeActionTile extends StatelessWidget {
+  const _HomeActionTile({
     required this.icon,
     required this.label,
     required this.onTap,
@@ -1611,21 +2208,200 @@ class _QuickActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        width: 110,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8F5EF),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE6E0D3)),
+          color: const Color(0xFFEEE6D9),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFD3C8B8)),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: const Color(0xFF0D8C74)),
-            const SizedBox(height: 10),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: const Color(0xFFD5E6DE),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: const Color(0xFF0D8C74)),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                height: 1.15,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DrawerTile extends StatelessWidget {
+  const _DrawerTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon, color: const Color(0xFF0D8C74)),
+      title: Text(label),
+      onTap: onTap,
+    );
+  }
+}
+
+class _InsuranceTile extends StatelessWidget {
+  const _InsuranceTile({
+    required this.title,
+    required this.subtitle,
+    required this.price,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final String price;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEEE6D9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFD3C7B8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD5E6DE),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.shield_outlined, color: Color(0xFF0D8C74)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(color: Color(0xFF564F47)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(price, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.tonal(
+              onPressed: onTap,
+              child: const Text('Buy insurance'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LanguageSelector extends StatelessWidget {
+  const _LanguageSelector({
+    required this.currentLanguage,
+    required this.onSelected,
+    this.disabled = false,
+  });
+
+  final Language currentLanguage;
+  final ValueChanged<Language> onSelected;
+  final bool disabled;
+
+  String _label(Language language) {
+    switch (language) {
+      case Language.english:
+        return 'EN';
+      case Language.hindi:
+        return 'हिं';
+      case Language.marathi:
+        return 'मर';
+    }
+  }
+
+  String _menuLabel(Language language) {
+    switch (language) {
+      case Language.english:
+        return 'English';
+      case Language.hindi:
+        return 'हिंदी';
+      case Language.marathi:
+        return 'मराठी';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<Language>(
+      enabled: !disabled,
+      tooltip: 'Select language',
+      onSelected: onSelected,
+      itemBuilder: (context) => Language.values
+          .map(
+            (language) => PopupMenuItem<Language>(
+              value: language,
+              child: Text(_menuLabel(language)),
+            ),
+          )
+          .toList(),
+      child: Container(
+        margin: const EdgeInsets.only(right: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEEE6D9),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFCEC3B3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.language, size: 18, color: Color(0xFF0D8C74)),
+            const SizedBox(width: 6),
+            Text(
+              _label(currentLanguage),
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(width: 2),
+            const Icon(Icons.keyboard_arrow_down, size: 18),
           ],
         ),
       ),
@@ -1647,7 +2423,7 @@ class _MiniInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F5EF),
+        color: const Color(0xFFEEE6D9),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -1753,7 +2529,7 @@ class _NoticeBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final background =
-        tone == NoticeTone.error ? const Color(0xFFFFEFEA) : const Color(0xFFEAF6FF);
+        tone == NoticeTone.error ? const Color(0xFFFFEFEA) : const Color(0xFFDCE8F0);
     final foreground =
         tone == NoticeTone.error ? const Color(0xFFAF4E33) : const Color(0xFF245F8A);
     return Container(
